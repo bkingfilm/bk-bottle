@@ -268,13 +268,22 @@ async function handleFish(req, reqUrl, env) {
     if (r <= 0) { picked = pool[i]; break; }
   }
 
-  // 访客登记:只捞不扔的人原本完全隐形。每个设备只写一次(读廉价、写1000/天),
-  // 写失败不能影响捞瓶本身
+  // 访客登记:只捞不扔的人原本完全隐形。天数存进 metadata,list 时零额外读取就能统计回访。
+  // 同一设备同一天只写一次,写失败不能影响捞瓶本身
   if (device) {
     try {
       const vkey = "v:" + device;
-      if (!(await env.BOTTLES.get(vkey))) {
-        await env.BOTTLES.put(vkey, String(Math.floor(Date.now() / 1000)));
+      const today = new Date().toISOString().slice(0, 10);
+      const got = await env.BOTTLES.getWithMetadata(vkey);
+      if (got.value === null && !got.metadata) {
+        await env.BOTTLES.put(vkey, "1", { metadata: { f: today, l: today, d: 1 } });
+      } else {
+        const m = got.metadata || {};
+        if (m.l !== today) {
+          await env.BOTTLES.put(vkey, "1", {
+            metadata: { f: m.f || today, l: today, d: (m.d || 1) + 1 },
+          });
+        }
       }
     } catch (e) { /* 额度用尽就先不记 */ }
   }
@@ -349,9 +358,11 @@ async function collectStats(env) {
   rows.sort((a, b2) => b2.ts - a.ts);
   const vl = await env.BOTTLES.list({ prefix: "v:", limit: 1000 });
   const visitors = vl.keys.length;
+  // 回访 = 在不同的日子来过两天以上
+  const returning = vl.keys.filter((k) => ((k.metadata || {}).d || 1) >= 2).length;
   return {
     total: keys.length, real, devices: devices.size,
-    visitors, visitorsCapped: !vl.list_complete,
+    visitors, returning, visitorsCapped: !vl.list_complete,
     fishedTotal, good, bad, rows,
   };
 }
@@ -385,6 +396,10 @@ async function handleAdmin(url, env) {
     + "<div>捞过瓶的设备" + (s.visitorsCapped ? "（超1000）" : "") + "<b>" + s.visitors + "</b></div>"
     + "<div>扔瓶转化率<b>"
     + (s.visitors ? Math.round((s.devices / s.visitors) * 100) + "%" : "—")
+    + "</b></div>"
+    + "<div>回来过的人<b>" + s.returning + "</b></div>"
+    + "<div>回访率<b>"
+    + (s.visitors ? Math.round((s.returning / s.visitors) * 100) + "%" : "—")
     + "</b></div>"
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
     + "<div>🌟 有意思<b>" + s.good + "</b></div>"

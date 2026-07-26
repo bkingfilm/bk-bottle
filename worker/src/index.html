@@ -434,7 +434,8 @@ function refreshMine() {
       myBottles = d.bottles || 0;
       var name = "<b>" + nickname(device) + "</b>";
       if (!d.bottles) {
-        $("myName").innerHTML = T.myNameNew(name);
+        // 一瓶没扔的人不显示代号:对他没意义,还多一个截图泄露面
+        $("myName").innerHTML = "";
         return;
       }
       var t = T.myNameHas(name, d.bottles);
