@@ -288,9 +288,24 @@ async function handleFish(req, reqUrl, env) {
     } catch (e) { /* 额度用尽就先不记 */ }
   }
 
-  const raw = await env.BOTTLES.get(picked.name);
+  let raw = await env.BOTTLES.get(picked.name);
   if (!raw) return json({ empty: true });
-  const bottle = JSON.parse(raw);
+  let bottle = JSON.parse(raw);
+
+  // 头三网别让人撞上只装 1 条的瓶子,第一印象就没了。
+  // 多抽两个候选比一比,取内容最多的那个;读操作便宜,不碰写额度
+  if (seen.size < 3 && pool.length >= 3 && (bottle.videos || []).length < 3) {
+    const extra = pool.filter((k) => k.name !== picked.name)
+      .sort(function () { return Math.random() - 0.5; }).slice(0, 2);
+    const raws = await Promise.all(extra.map((k) => env.BOTTLES.get(k.name)));
+    raws.forEach(function (r, i) {
+      if (!r) return;
+      const b = JSON.parse(r);
+      if ((b.videos || []).length > (bottle.videos || []).length) {
+        bottle = b; raw = r; picked = extra[i];
+      }
+    });
+  }
   if (Math.random() < 1 / FISH_SAMPLE) {
     bottle.fished = (bottle.fished || 0) + FISH_SAMPLE;
     // 被捞数同步进 metadata,回执接口才能不读正文就统计

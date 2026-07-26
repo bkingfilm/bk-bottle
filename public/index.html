@@ -173,6 +173,7 @@ details.grab {
   border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px;
 }
 details.grab summary { cursor: pointer; color: var(--glow); }
+@media (max-width: 640px) { #grabPcBox { display: none; } }
 details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
 .bm {
   display: inline-block; padding: 6px 14px; border-radius: 8px;
@@ -199,15 +200,15 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
   <div id="cheer"></div>
 
   <div class="tabs">
-    <button id="tabThrow" class="on"></button>
-    <button id="tabFish"></button>
+    <button id="tabThrow"></button>
+    <button id="tabFish" class="on"></button>
   </div>
 
-  <div id="panelThrow" class="panel on">
+  <div id="panelThrow" class="panel">
     <h2 id="h2Throw"></h2>
     <p class="hint" id="hintThrow"></p>
     <textarea id="links"></textarea>
-    <details class="grab" style="margin-top:14px; margin-bottom:0">
+    <details class="grab" id="grabPcBox" style="margin-top:14px; margin-bottom:0">
       <summary id="grabPcSum"></summary>
       <ol>
         <li id="grabPc1"></li>
@@ -231,7 +232,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <div class="me" id="myName"></div>
   </div>
 
-  <div id="panelFish" class="panel">
+  <div id="panelFish" class="panel on">
     <h2 id="h2Fish"></h2>
     <p class="hint" id="hintFish"></p>
     <div id="folCount"></div>
@@ -399,6 +400,7 @@ function applyLang() {
   $("grabMb2").textContent = T.grabMb2;
   $("grabMb3").textContent = T.grabMb3;
   $("counterWrap").innerHTML = T.counter[0] + '<b id="parsed">0</b>' + T.counter[1];
+  $("counterWrap").style.display = "none";
   $("btnThrow").textContent = T.btnThrow;
   $("btnFish").textContent = T.btnFish;
   $("footer1").textContent = T.footer1;
@@ -640,6 +642,7 @@ $("links").addEventListener("input", function () {
   var ids = parseIds($("links").value);
   var n = ids.vids.length + ids.lists.length + ids.bilis.length;
   $("parsed").textContent = n;
+  $("counterWrap").style.display = n ? "block" : "none";
   $("btnThrow").disabled = n === 0 || n > 10;
   try { localStorage.setItem("yb_draft", $("links").value); } catch (e) {}
   var over = $("overflow");
