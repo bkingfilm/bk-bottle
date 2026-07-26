@@ -1,0 +1,21 @@
+[
+  {
+    "ts": "2026-07-26 13:04",
+    "total": 87,
+    "real": 45,
+    "throwers": 29,
+    "visitors": 40,
+    "returning": 1
+  },
+  {
+    "ts": "2026-07-26 21:04",
+    "total": 92,
+    "real": 50,
+    "throwers": 32,
+    "visitors": 51,
+    "returning": 2,
+    "picked_est": 1136,
+    "interesting": 20,
+    "meh": 41
+  }
+]

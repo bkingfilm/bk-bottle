@@ -110,6 +110,27 @@ input[type=text] { margin-top: 12px; }
   color: var(--amber); font-size: 14px; line-height: 1.8;
 }
 #nudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+#overflow {
+  display: none; margin-top: 12px; padding: 10px 14px; font-size: 13px; line-height: 1.7;
+  background: rgba(255, 154, 138, .1); border: 1px solid rgba(255, 154, 138, .5);
+  border-radius: 10px; color: #ff9a8a;
+}
+#preview { display: none; margin-top: 14px; flex-direction: column; gap: 8px; }
+#preview.on { display: flex; }
+.pv {
+  display: flex; gap: 10px; align-items: center;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; padding: 7px 9px;
+}
+.pv img { width: 84px; height: 48px; object-fit: cover; border-radius: 6px; background: #000; flex-shrink: 0; }
+.pv .t { flex: 1; font-size: 13px; line-height: 1.5; color: var(--ink); }
+.pv .t small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
+.pv .x {
+  flex-shrink: 0; width: 26px; height: 26px; cursor: pointer; font-size: 15px;
+  background: none; color: var(--dim); border: 1px solid var(--line); border-radius: 6px;
+}
+.pv .x:hover { color: #ff9a8a; border-color: #ff9a8a; }
+.pv.load .t { color: var(--dim); }
 #cheer {
   display: none; margin-bottom: 18px; padding: 13px 16px; text-align: center;
   background: linear-gradient(135deg, rgba(255, 207, 110, .15), rgba(77, 208, 225, .1));
@@ -143,6 +164,7 @@ input[type=text] { margin-top: 12px; }
 #fishEmpty { text-align: center; color: var(--dim); padding: 30px 0; line-height: 2; }
 footer { text-align: center; margin-top: 30px; font-size: 13px; color: var(--dim); line-height: 1.8; }
 footer a { color: var(--glow); text-decoration: none; }
+footer .oss { margin-top: 10px; font-size: 12px; opacity: .75; }
 footer a:hover { text-decoration: underline; }
 .wave { text-align: center; font-size: 40px; padding: 20px 0; }
 
@@ -201,6 +223,8 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
         <li id="grabMb3"></li>
       </ol>
     </details>
+    <div id="preview"></div>
+    <div id="overflow"></div>
     <div class="counter" id="counterWrap"></div>
     <button class="big" id="btnThrow" disabled></button>
     <div class="msg" id="msgThrow"></div>
@@ -220,6 +244,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
   <footer>
     <span id="footer1"></span><br>
     <span id="footer2"></span><a href="https://discord.gg/uT6xryBX9w" target="_blank" rel="noopener">🌿 BKinGfilm</a>
+    <div class="oss"><span id="footer3"></span><a href="https://github.com/bkingfilm/bk-bottle" target="_blank" rel="noopener">GitHub</a></div>
   </footer>
 </div>
 
@@ -257,6 +282,7 @@ var I18N = {
     counter: ["已识别 ", " 个有效视频"],
     btnThrow: "扔进海里", btnFish: "下网",
     footer1: "捞到好东西，或者玩出毛病了？", footer2: "来 Discord 说一声：",
+    footer3: "这东西不读你的浏览记录，代码都在 ",
     myNameNew: function (n) { return "你在海里的代号是 " + n + "，扔出去的瓶子都挂这个名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 个 🌟"; },
@@ -279,6 +305,9 @@ var I18N = {
     openIt: "打开看看是什么",
     autofill: function (n) { return "⚡ 已自动装入 " + n + " 个视频，过一眼没问题就扔"; },
     shared: "⚡ 收到分享的视频，可以继续分享几条再一起扔",
+    overflow: function (n) {
+      return "一瓶最多装 10 条，现在多了 " + n + " 条。删掉几条，或者留着下次单独扔一瓶";
+    },
     nudge: "🍾 你已经捞了 3 瓶别人的，海里还没有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "继续捞",
     shareText: function (lines, origin) {
@@ -305,6 +334,7 @@ var I18N = {
     counter: ["已辨識 ", " 個有效影片"],
     btnThrow: "扔進海裡", btnFish: "下網",
     footer1: "撈到好東西，或者玩出毛病了？", footer2: "來 Discord 說一聲：",
+    footer3: "這東西不讀你的瀏覽記錄，程式碼都在 ",
     myNameNew: function (n) { return "你在海裡的代號是 " + n + "，扔出去的瓶子都掛這個名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 個 🌟"; },
@@ -327,6 +357,9 @@ var I18N = {
     openIt: "打開看看是什麼",
     autofill: function (n) { return "⚡ 已自動裝入 " + n + " 個影片，過一眼沒問題就扔"; },
     shared: "⚡ 收到分享的影片，可以繼續分享幾條再一起扔",
+    overflow: function (n) {
+      return "一瓶最多裝 10 條，現在多了 " + n + " 條。刪掉幾條，或者留著下次單獨扔一瓶";
+    },
     nudge: "🍾 你已經撈了 3 瓶別人的，海裡還沒有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "繼續撈",
     shareText: function (lines, origin) {
@@ -370,12 +403,15 @@ function applyLang() {
   $("btnFish").textContent = T.btnFish;
   $("footer1").textContent = T.footer1;
   $("footer2").textContent = T.footer2;
+  $("footer3").textContent = T.footer3;
   $("langBtn").textContent = (lang === "tw" ? "繁" : "简") + " ▾";
   document.querySelectorAll("#langMenu button").forEach(function (b) {
     b.classList.toggle("on", b.dataset.lang === lang);
   });
   $("langMenu").classList.remove("open");
   hideNudge();
+  renderPreview();
+  $("links").dispatchEvent(new Event("input"));
   bindBookmarklet();
   refreshStats();
   refreshMine();
@@ -495,7 +531,7 @@ function parseIds(text) {
     var lm = tok.match(LIST_RE);
     if (lm && !seen[lm[1]]) { seen[lm[1]] = 1; lists.push(lm[1]); }
   });
-  return { vids: vids.slice(0, 10), lists: lists.slice(0, 10), bilis: bilis.slice(0, 10) };
+  return { vids: vids, lists: lists, bilis: bilis };
 }
 
 // B站接口整段封禁 Cloudflare 机房 IP,标题只能在扔瓶人自己的浏览器里拿
@@ -529,11 +565,93 @@ function biliJsonp(id) {
   });
 }
 
+// 贴进来的是一串裸链接,谁也认不出哪条是什么。解析出来先渲染成带标题的卡片,
+// 每张能单独删掉,删完就腾出位置装别的平台
+var pvTimer = null;
+var pvCache = {};   // id -> {title, author, thumb}
+
+function pvKey(item) {
+  return item.bvid ? "b:" + item.bvid : item.list ? "l:" + item.list : "v:" + item.vid;
+}
+
+function currentItems() {
+  var ids = parseIds($("links").value);
+  return ids.vids.map(function (v) { return { vid: v }; })
+    .concat(ids.lists.map(function (x) { return { list: x }; }))
+    .concat(ids.bilis.map(function (x) { return { bvid: x }; }));
+}
+
+function renderPreview() {
+  var items = currentItems();
+  var box = $("preview");
+  if (!items.length) { box.className = ""; box.innerHTML = ""; return; }
+  box.className = "on";
+  box.innerHTML = items.map(function (it, i) {
+    var c = pvCache[pvKey(it)] || {};
+    var img = it.vid ? "https://i.ytimg.com/vi/" + it.vid + "/default.jpg" : (c.thumb || "");
+    var badge = it.bvid ? '<span class="pf-b">B站</span>' : it.list ? "📃 " : "";
+    var title = c.title || (it.bvid || it.list || it.vid);
+    return '<div class="pv' + (c.title ? "" : " load") + '">'
+      + '<img referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
+      + '<div class="t">' + badge + esc(title)
+      + (c.author ? "<small>" + esc(c.author) + "</small>" : "")
+      + '</div><button class="x" onclick="dropItem(' + i + ')">✕</button></div>';
+  }).join("");
+}
+
+function dropItem(i) {
+  var items = currentItems();
+  var gone = items[i];
+  if (!gone) return;
+  var id = gone.vid || gone.list || gone.bvid;
+  // 从输入框里删掉含这个 id 的那一行,输入框始终是唯一数据源
+  $("links").value = $("links").value.split(/\n/)
+    .filter(function (line) { return line.indexOf(id) < 0; }).join("\n");
+  $("links").dispatchEvent(new Event("input"));
+}
+
+function fetchPreviewMeta() {
+  var items = currentItems();
+  var needV = [], needL = [], needB = [];
+  items.forEach(function (it) {
+    if (pvCache[pvKey(it)]) return;
+    if (it.vid) needV.push(it.vid);
+    else if (it.list) needL.push(it.list);
+    else if (it.bvid) needB.push(it.bvid);
+  });
+  if (needV.length || needL.length) {
+    fetch("/api/preview?v=" + needV.join(",") + "&l=" + needL.join(","))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        (d.items || []).forEach(function (x) {
+          if (x.title) pvCache[pvKey(x)] = { title: x.title, author: x.author, thumb: x.thumb };
+        });
+        renderPreview();
+      }).catch(function () {});
+  }
+  needB.forEach(function (b) {
+    biliJsonp(b).then(function (r) {
+      if (r) { pvCache["b:" + b] = { title: r.title, author: r.author, thumb: r.thumb }; renderPreview(); }
+    });
+  });
+}
+
 $("links").addEventListener("input", function () {
   var ids = parseIds($("links").value);
   var n = ids.vids.length + ids.lists.length + ids.bilis.length;
   $("parsed").textContent = n;
-  $("btnThrow").disabled = n === 0;
+  $("btnThrow").disabled = n === 0 || n > 10;
+  try { localStorage.setItem("yb_draft", $("links").value); } catch (e) {}
+  var over = $("overflow");
+  if (n > 10) {
+    over.textContent = T.overflow(n - 10);
+    over.style.display = "block";
+  } else {
+    over.style.display = "none";
+  }
+  renderPreview();
+  clearTimeout(pvTimer);
+  pvTimer = setTimeout(fetchPreviewMeta, 600);
 });
 
 $("btnThrow").onclick = function () {
@@ -543,7 +661,12 @@ $("btnThrow").onclick = function () {
   var msg = $("msgThrow");
   msg.className = "msg";
   msg.textContent = T.sealing;
-  Promise.all(ids.bilis.map(biliJsonp)).then(function (bmetas) {
+  Promise.all(ids.bilis.map(function (b) {
+    var c = pvCache["b:" + b];
+    return c && c.title
+      ? Promise.resolve({ id: b, title: c.title, author: c.author, thumb: c.thumb })
+      : biliJsonp(b);
+  })).then(function (bmetas) {
     var bilis = bmetas.filter(Boolean);
     if (!ids.vids.length && !ids.lists.length && !bilis.length) {
       msg.className = "msg err";
@@ -560,6 +683,8 @@ $("btnThrow").onclick = function () {
         msg.className = "msg ok";
         msg.textContent = T.thrown(d.count);
         $("links").value = ""; $("parsed").textContent = "0";
+        try { localStorage.removeItem("yb_draft"); } catch (e) {}
+        renderPreview();
         refreshStats();
         refreshMine();
       } else {
@@ -653,13 +778,17 @@ function esc(s) {
   });
 }
 
-var BM_SRC = "(function(){var seen={},ids=[];"
+// YouTube 和 B站 的历史页都要认,两边的 id 分别塞进 hash
+var BM_SRC = "(function(){var seen={},yt=[],bv=[];"
   + "document.querySelectorAll('a[href]').forEach(function(a){"
   + "var m=a.href.match(/[?&]v=([A-Za-z0-9_-]{11})/)||a.href.match(/\\/shorts\\/([A-Za-z0-9_-]{11})/);"
-  + "if(m&&!seen[m[1]]){seen[m[1]]=1;ids.push(m[1])}});"
-  + "ids=ids.slice(0,10);"
-  + "if(!ids.length){alert('这一页没找到视频，先打开 youtube.com/feed/history 再点');return}"
-  + "window.open('" + location.origin + "/#vids='+ids.join(','))})()";
+  + "if(m){if(!seen[m[1]]){seen[m[1]]=1;yt.push(m[1])}return}"
+  + "var b=a.href.match(/bilibili\\.com\\/video\\/(BV[A-Za-z0-9]{10})/);"
+  + "if(b&&!seen[b[1]]){seen[b[1]]=1;bv.push(b[1])}});"
+  + "yt=yt.slice(0,10);bv=bv.slice(0,10);"
+  + "if(!yt.length&&!bv.length){alert('这一页没找到视频，先打开 YouTube 或 B站 的历史页再点');return}"
+  + "var q=[];if(yt.length)q.push('vids='+yt.join(','));if(bv.length)q.push('bvs='+bv.join(','));"
+  + "window.open('" + location.origin + "/#'+q.join('&'))})()";
 // 语言切换会重建这个链接元素,所以每次都要重新挂
 function bindBookmarklet() {
   var el = $("bookmarklet");
@@ -669,6 +798,13 @@ function bindBookmarklet() {
 }
 
 // 安卓装到桌面后,YouTube 的分享菜单里会出现本站,分享过来落到 /?share=...
+(function restoreDraft() {
+  try {
+    var d = localStorage.getItem("yb_draft");
+    if (d) $("links").value = d;
+  } catch (e) {}
+})();
+
 (function autofillFromShare() {
   var q = new URLSearchParams(location.search);
   var shared = [q.get("share"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
@@ -688,20 +824,29 @@ function bindBookmarklet() {
 })();
 
 (function autofillFromHash() {
-  var m = location.hash.match(/vids=([A-Za-z0-9_,-]+)/);
-  if (!m) return;
-  var ids = m[1].split(",").filter(function (v) {
-    return /^[A-Za-z0-9_-]{11}$/.test(v);
-  }).slice(0, 10);
-  if (!ids.length) return;
+  var my = location.hash.match(/vids=([A-Za-z0-9_,-]+)/);
+  var mb = location.hash.match(/bvs=([A-Za-z0-9,]+)/);
+  if (!my && !mb) return;
+  var lines = [];
+  if (my) {
+    my[1].split(",").filter(function (v) { return /^[A-Za-z0-9_-]{11}$/.test(v); })
+      .slice(0, 10).forEach(function (v) { lines.push("https://www.youtube.com/watch?v=" + v); });
+  }
+  if (mb) {
+    mb[1].split(",").filter(function (v) { return /^BV[A-Za-z0-9]{10}$/.test(v); })
+      .slice(0, 10).forEach(function (v) { lines.push("https://www.bilibili.com/video/" + v); });
+  }
+  if (!lines.length) return;
+  lines = lines.slice(0, 10);
   history.replaceState(null, "", location.pathname);
   switchTab("throw");
   var ta = $("links");
-  ta.value = ids.map(function (v) { return "https://www.youtube.com/watch?v=" + v; }).join("\n");
+  // 追加而不是覆盖:书签在新标签打开,之前删剩的内容靠草稿恢复回来了,不能冲掉
+  ta.value = (ta.value.trim() ? ta.value.replace(/\s*$/, "\n") : "") + lines.join("\n");
   ta.dispatchEvent(new Event("input"));
   var msg = $("msgThrow");
   msg.className = "msg ok";
-  msg.textContent = T.autofill(ids.length);
+  msg.textContent = T.autofill(lines.length);
 })();
 
 $("btnFish").onclick = function () {

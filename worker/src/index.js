@@ -473,6 +473,23 @@ export default {
         const keys = await getIndex(env);
         return json({ count: keys.length });
       }
+      if (p === "/api/preview") {
+        // 装瓶前的预览:只调 oEmbed 拿标题,不碰 KV。B站由前端 JSONP 自己取
+        const vs = (url.searchParams.get("v") || "").split(",")
+          .filter((x) => VID_RE.test(x)).slice(0, 10);
+        const ls = (url.searchParams.get("l") || "").split(",")
+          .filter((x) => LIST_RE.test(x)).slice(0, 10);
+        if (!vs.length && !ls.length) return json({ items: [] });
+        const [vm, lm] = await Promise.all([
+          Promise.all(vs.map(fetchMeta)),
+          Promise.all(ls.map(fetchListMeta)),
+        ]);
+        const items = vs.map((v, i) => ({ vid: v, title: vm[i][0] || "", author: vm[i][1] || "" }))
+          .concat(ls.map((x, i) => ({
+            list: x, title: lm[i][0] || "", author: lm[i][1] || "", thumb: lm[i][2] || "",
+          })));
+        return json({ items });
+      }
       if (p === "/api/mine") {
         // 回执:让扔瓶人看到自己的瓶子被谁喜欢。全程走缓存索引,不额外消耗 KV
         const dev = url.searchParams.get("device") || "";

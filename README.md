@@ -1,69 +1,69 @@
-# BK Bottle · BK漂流瓶
+# BK漂流瓶
 
-A message-in-a-bottle for what you actually watch.
+把你最近真的在看的视频装进瓶子扔进海里，再捞一个陌生人的瓶子上来。
 
-Drop 1 to 5 links from your real watch list into the sea, then pull up a stranger's bottle and see what they are watching. No account, no tracking, no algorithm.
+不用注册，不读你的浏览记录，没有算法推荐。
 
-**Live: https://yt-bottle.bkingfilm.workers.dev**
+**线上：https://yt-bottle.bkingfilm.workers.dev**
 
-Supports YouTube (videos and playlists) and Bilibili, mixed in the same bottle.
+支持 YouTube（视频和播放列表）和 B站，一个瓶子里可以混着装。
 
-## Why
+## 为什么做这个
 
-Recommendation feeds keep showing you more of what you already clicked. This is a hand-curated way out: real people pick a few things they are genuinely watching, and you get a random one back. Not an algorithm's guess at what is "similar but different" — an actual stranger's evening.
+算法喂给你的东西越来越像你已经点过的东西。这是一条手工的出路：真人挑几条自己正在看的扔进来，你随机捞一个回去。不是算法猜出来的「相似但不同」，是一个陌生人真实的晚上。
 
-Prior art worth knowing: [OtherTube](https://dl.acm.org/doi/10.1145/3491102.3502028) (CHI 2022) showed that exchanging recommendations with strangers does help people discover new interests. TheirTube and FlipFeed explored nearby ideas. All of them were research prototypes and are gone. This one is a product, and it stays up.
+学术界做过很接近的东西。[OtherTube](https://dl.acm.org/doi/10.1145/3491102.3502028)（CHI 2022）用 41 人 10 天的实验证明了和陌生人交换推荐确实能让人发现新兴趣，TheirTube 和 FlipFeed 探索过相邻的思路。它们全是研究原型，现在都没了。这个是产品，会一直开着。
 
-## What it does not do
+## 不做什么
 
-- **Does not read your browsing history.** The web has no API for that, and even if it did, a full watch history leaks far more about a person than they intend to share. You paste a few links you chose. That is the whole privacy model.
-- **No accounts.** Identity is a random id in your browser's localStorage, hashed into a stable sea-themed handle like `Lighthouse 280`. The server never sees anything else about you.
-- **No comments or free text.** Any open text field eventually becomes a billboard. Bottles hold links only.
+- **不读你的浏览记录。** 网页根本没有这个 API，就算有也不该用。完整的观看历史能反推出的东西远超一个人愿意分享的范围。你自己挑几条链接贴进来，这就是全部的隐私模型。
+- **不要账号。** 身份是浏览器 localStorage 里的一串随机 id，哈希成「灯塔 280」这样的稳定代号，服务器不知道你的任何其他信息。
+- **没有留言和评论。** 任何自由文本框最后都会变成广告牌，瓶子里只放链接。
 
-## How it works
+## 怎么实现的
 
-Single Cloudflare Worker, KV for storage, no build step, no dependencies. The whole thing is one HTML file and one JS file.
+一个 Cloudflare Worker 加 KV 存储，没有构建步骤，没有依赖。全部代码就是一个 HTML 文件和一个 JS 文件。
 
 ```
-public/index.html     the entire frontend
-worker/src/index.js   the entire backend
-server.py            local dev server (stdlib only, no pip install)
+public/index.html     整个前端
+worker/src/index.js   整个后端
+server.py             本地开发服务器（只用标准库，不用装任何东西）
 ```
 
-Some details that took real work:
+几个真正花了力气的地方：
 
-- **Every link is verified server-side.** Titles and thumbnails come from YouTube's oEmbed endpoint at throw time. Made-up video ids get dropped; a bottle of only fake ids is rejected. Bilibili blocks Cloudflare's datacenter IPs entirely (`-412` on every request, no header trick helps), so Bilibili metadata is fetched by the thrower's own browser via JSONP and the server only sanitizes it.
-- **Bottles you have seen never come back.** The client sends its seen-list, the server excludes it. Empty the sea and you get an invitation to throw one in.
-- **Quality-weighted draws.** Each bottle carries good/bad votes in KV metadata; weights shift the odds without ever fully burying anything.
-- **Remember a bottler.** Star someone whose taste you like and 70% of your future draws come from them. The other 30% stay random on purpose — turn it to 100% and you have rebuilt the filter bubble you were trying to escape.
-- **Anti-spam without a rulebook.** Rate limits per IP, a channel-concentration check that rejects self-promo bottles, and no published thresholds. The rules only surface when you trip them.
-- **KV free tier is 1000 writes and 1000 lists per day.** The first version listed the whole index on every draw and wrote back a fish counter each time; a few hundred visits burned half the daily quota. Now the index lives in isolate memory for 60s and the fish counter is sampled 1-in-10.
+- **每条链接都在服务端验证过。** 标题和封面在扔瓶时从 YouTube oEmbed 取，编造的视频 id 会被丢弃，全是假 id 的瓶子直接拒收。B站把 Cloudflare 机房 IP 整段封了（每个请求都返回 `-412`，换请求头没用），所以 B站 的元数据由扔瓶人自己的浏览器通过 JSONP 取回来，服务端只做清洗。
+- **捞过的瓶子不会再出现。** 客户端把见过的清单发上来，服务端排除掉。把整片海捞空了会提示你扔一瓶回去。
+- **按质量加权。** 每个瓶子的好评差评记在 KV metadata 里，权重影响被捞到的概率，但不会把任何瓶子彻底埋掉。
+- **可以记住某个瓶主。** 遇到品味对味的陌生人可以记住他，之后七成的捞瓶来自他，剩下三成仍然完全随机。三成是故意留的，改成十成就等于亲手重建了你想逃离的茧房。
+- **反滥用不写在界面上。** 每个 IP 每天限扔几瓶，同一频道占比过半的瓶子会被拒收，具体阈值不公开。规则只在你踩到的时候才露头。
+- **KV 免费额度每天只有 1000 次写和 1000 次 list。** 第一版每次捞瓶都要 list 整个索引、还要写回一次被捞计数，几百次访问就烧掉一半额度。现在索引在 isolate 内存里缓存 60 秒，被捞计数十次抽样写一次。
 
-## Run it yourself
+## 自己跑一个
 
-Local, no cloud account needed:
+本地运行，不需要云账号：
 
 ```bash
 python server.py       # http://127.0.0.1:8765
 ```
 
-Deploy to Cloudflare:
+部署到 Cloudflare：
 
 ```bash
 npm i -g wrangler
 wrangler login
 wrangler kv namespace create BOTTLES
-cp wrangler.toml.example worker/wrangler.toml   # paste the namespace id
+cp wrangler.toml.example worker/wrangler.toml   # 把 namespace id 填进去
 cd worker && wrangler deploy
 ```
 
-The admin dashboard lives at `/admin?key=...`; set the key with `wrangler secret put ADMIN_KEY`.
+后台数据页在 `/admin?key=...`，密钥用 `wrangler secret put ADMIN_KEY` 设置。
 
-## Notes
+## 说明
 
-Seed bottles ship with the project so a fresh instance is not an empty sea. They are real videos, hand-picked, credited to placeholder bottlers.
+项目自带一批种子瓶，这样新部署一个实例不会是一片空海。里面都是真实存在的视频，人工挑的，挂在占位瓶主名下。
 
-User-submitted bottles are never committed to this repo.
+用户扔进来的瓶子不会提交到这个仓库。
 
 ## License
 
