@@ -1,0 +1,22 @@
+# 用户数据:真实的观看记录,绝不能公开
+bottles.json
+worker/kv-*.json
+worker/removed-politics-*.json
+
+# 后台密钥
+worker/admin-key.txt
+*.key
+
+# 运行时产物
+__pycache__/
+*.pyc
+node_modules/
+.wrangler/
+live.html
+a.html
+kl.json
+t.json
+adm.html
+worker/wrangler.toml
+worker/DEPLOY.md
+archive-bili/

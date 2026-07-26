@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BK漂流瓶</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0d2c46">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<style>
+:root {
+  --deep: #071a2b;
+  --mid: #0d2c46;
+  --card: #10344f;
+  --line: #1e4a6d;
+  --ink: #e8f2fa;
+  --dim: #8fb3cc;
+  --glow: #4dd0e1;
+  --amber: #ffcf6e;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  background: linear-gradient(180deg, #04101d 0%, var(--deep) 40%, #0a2438 100%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+.wrap { max-width: 720px; margin: 0 auto; padding: 40px 20px 80px; position: relative; }
+#langSwitch { position: absolute; top: 14px; right: 20px; z-index: 5; }
+#langBtn {
+  padding: 5px 12px; font-size: 13px; cursor: pointer;
+  background: rgba(16, 52, 79, .8); color: var(--dim);
+  border: 1px solid var(--line); border-radius: 8px;
+}
+#langBtn:hover { color: var(--ink); border-color: var(--glow); }
+#langMenu {
+  display: none; position: absolute; top: 32px; right: 0; min-width: 108px;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 10px; overflow: hidden;
+}
+#langMenu.open { display: block; }
+#langMenu button {
+  display: block; width: 100%; text-align: left; cursor: pointer;
+  padding: 9px 14px; font-size: 13px; white-space: nowrap;
+  background: none; color: var(--dim); border: none;
+}
+#langMenu button:hover { background: var(--mid); color: var(--ink); }
+#langMenu button.on { color: var(--glow); }
+header { text-align: center; margin-bottom: 34px; }
+header .logo { font-size: 52px; }
+header h1 { font-size: 26px; letter-spacing: 2px; margin-top: 8px; }
+header p { color: var(--dim); margin-top: 8px; font-size: 14px; line-height: 1.7; }
+#stats { color: var(--glow); }
+
+.tabs { display: flex; gap: 12px; margin-bottom: 22px; }
+.tabs button {
+  flex: 1; padding: 14px 0; font-size: 16px; cursor: pointer;
+  background: var(--mid); color: var(--dim);
+  border: 1px solid var(--line); border-radius: 12px;
+  transition: all .15s;
+}
+.tabs button.on { background: var(--card); color: var(--ink); border-color: var(--glow); }
+
+.panel { display: none; background: var(--mid); border: 1px solid var(--line); border-radius: 16px; padding: 24px; }
+.panel.on { display: block; }
+.panel h2 { font-size: 17px; margin-bottom: 6px; }
+.panel .hint { color: var(--dim); font-size: 13px; line-height: 1.8; margin-bottom: 14px; }
+
+textarea, input[type=text] {
+  width: 100%; background: var(--deep); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 12px; font-size: 14px; font-family: inherit;
+}
+textarea { height: 150px; resize: vertical; line-height: 1.8; }
+textarea:focus, input:focus { outline: none; border-color: var(--glow); }
+input[type=text] { margin-top: 12px; }
+.counter { margin-top: 10px; font-size: 13px; color: var(--dim); }
+.counter b { color: var(--amber); }
+
+.big {
+  width: 100%; margin-top: 16px; padding: 15px 0;
+  font-size: 16px; font-weight: bold; cursor: pointer;
+  background: linear-gradient(135deg, #1687a7, #4dd0e1);
+  color: #04202e; border: none; border-radius: 12px;
+}
+.big:disabled { opacity: .45; cursor: default; }
+.msg { margin-top: 14px; font-size: 14px; text-align: center; min-height: 20px; }
+.msg.ok { color: var(--glow); }
+.msg.err { color: #ff9a8a; }
+
+.by {
+  color: var(--amber); font-size: 13px; margin-bottom: 12px; text-align: center;
+  background: rgba(255, 207, 110, .07); border: 1px dashed rgba(255, 207, 110, .35);
+  border-radius: 10px; padding: 8px 12px; line-height: 1.6;
+}
+.fol {
+  margin-top: 8px; padding: 6px 14px; font-size: 12px; cursor: pointer;
+  background: var(--card); color: var(--amber);
+  border: 1px solid rgba(255, 207, 110, .5); border-radius: 8px;
+}
+.fol:hover { border-color: var(--amber); }
+#folCount { color: var(--dim); font-size: 12px; margin-bottom: 10px; }
+#folCount b { color: var(--amber); }
+.me { color: var(--dim); font-size: 12px; text-align: center; margin-top: 12px; line-height: 1.7; }
+.me b { color: var(--amber); }
+#nudge {
+  display: none; margin-top: 14px; padding: 13px 16px; text-align: center;
+  background: linear-gradient(135deg, rgba(255, 207, 110, .13), rgba(77, 208, 225, .09));
+  border: 1px solid rgba(255, 207, 110, .5); border-radius: 12px;
+  color: var(--amber); font-size: 14px; line-height: 1.8;
+}
+#nudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+#cheer {
+  display: none; margin-bottom: 18px; padding: 13px 16px; text-align: center;
+  background: linear-gradient(135deg, rgba(255, 207, 110, .15), rgba(77, 208, 225, .1));
+  border: 1px solid rgba(255, 207, 110, .55); border-radius: 12px;
+  color: var(--amber); font-size: 14px; line-height: 1.8;
+}
+.wm { text-align: center; color: var(--dim); font-size: 12px; margin-top: 14px; letter-spacing: .5px; }
+.fb { display: flex; gap: 10px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.fb button {
+  padding: 9px 20px; font-size: 14px; cursor: pointer;
+  background: var(--card); color: var(--ink);
+  border: 1px solid var(--line); border-radius: 10px;
+}
+.fb button:hover { border-color: var(--glow); }
+.fb .done { color: var(--dim); font-size: 13px; padding: 9px 0; }
+.vlist { display: flex; flex-direction: column; gap: 12px; }
+.vcard {
+  display: flex; gap: 14px; align-items: center; text-decoration: none;
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: 12px; padding: 10px; color: var(--ink);
+  transition: border-color .15s;
+}
+.vcard:hover { border-color: var(--glow); }
+.vcard img { width: 128px; height: 72px; object-fit: cover; border-radius: 8px; background: #000; flex-shrink: 0; }
+.vcard .t { font-size: 14px; line-height: 1.6; }
+.pf-b {
+  font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-right: 6px;
+  background: #133040; color: #6fd5f0; vertical-align: 2px;
+}
+.vcard .u { font-size: 12px; color: var(--dim); margin-top: 4px; }
+#fishEmpty { text-align: center; color: var(--dim); padding: 30px 0; line-height: 2; }
+footer { text-align: center; margin-top: 30px; font-size: 13px; color: var(--dim); line-height: 1.8; }
+footer a { color: var(--glow); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+.wave { text-align: center; font-size: 40px; padding: 20px 0; }
+
+details.grab {
+  background: rgba(77, 208, 225, .06); border: 1px solid var(--line);
+  border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 13px;
+}
+details.grab summary { cursor: pointer; color: var(--glow); }
+details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
+.bm {
+  display: inline-block; padding: 6px 14px; border-radius: 8px;
+  background: var(--card); border: 1px solid var(--glow);
+  color: var(--glow); text-decoration: none; font-weight: bold; cursor: grab;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="langSwitch">
+    <button id="langBtn" onclick="toggleLangMenu(event)">简 ▾</button>
+    <div id="langMenu">
+      <button data-lang="cn" onclick="setLang('cn')">简体中文</button>
+      <button data-lang="tw" onclick="setLang('tw')">繁體中文</button>
+    </div>
+  </div>
+  <header>
+    <div class="logo">🌊🍾</div>
+    <h1>BK漂流瓶</h1>
+    <p id="subTitle"></p>
+  </header>
+
+  <div id="cheer"></div>
+
+  <div class="tabs">
+    <button id="tabThrow" class="on"></button>
+    <button id="tabFish"></button>
+  </div>
+
+  <div id="panelThrow" class="panel on">
+    <h2 id="h2Throw"></h2>
+    <p class="hint" id="hintThrow"></p>
+    <textarea id="links"></textarea>
+    <details class="grab" style="margin-top:14px; margin-bottom:0">
+      <summary id="grabPcSum"></summary>
+      <ol>
+        <li id="grabPc1"></li>
+        <li id="grabPc2"></li>
+        <li id="grabPc3"></li>
+      </ol>
+    </details>
+    <details class="grab" style="margin-top:10px; margin-bottom:0">
+      <summary id="grabMbSum"></summary>
+      <ol>
+        <li id="grabMb1"></li>
+        <li id="grabMb2"></li>
+        <li id="grabMb3"></li>
+      </ol>
+    </details>
+    <div class="counter" id="counterWrap"></div>
+    <button class="big" id="btnThrow" disabled></button>
+    <div class="msg" id="msgThrow"></div>
+    <div class="me" id="myName"></div>
+  </div>
+
+  <div id="panelFish" class="panel">
+    <h2 id="h2Fish"></h2>
+    <p class="hint" id="hintFish"></p>
+    <div id="folCount"></div>
+    <button class="big" id="btnFish"></button>
+    <div class="msg" id="msgFish"></div>
+    <div id="nudge"></div>
+    <div id="fishResult" style="margin-top:16px"></div>
+  </div>
+
+  <footer>
+    <span id="footer1"></span><br>
+    <span id="footer2"></span><a href="https://discord.gg/uT6xryBX9w" target="_blank" rel="noopener">🌿 BKinGfilm</a>
+  </footer>
+</div>
+
+<script>
+var device = localStorage.getItem("yb_device");
+if (!device) {
+  device = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  localStorage.setItem("yb_device", device);
+}
+var seen = [];
+try { seen = JSON.parse(localStorage.getItem("yb_seen") || "[]"); } catch (e) {}
+var follow = [];
+try { follow = JSON.parse(localStorage.getItem("yb_follow") || "[]"); } catch (e) {}
+
+function $(id) { return document.getElementById(id); }
+
+// 繁体版用台港说法而不是逐字转换:视频→影片、链接→連結、信息茧房→同溫層
+var I18N = {
+  cn: {
+    sub: "把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。",
+    seaHas: ["海里现在有 ", " 个瓶子"],
+    tabThrow: "🍾 扔一个瓶子", tabFish: "🎣 捞一个瓶子",
+    h2Throw: "装瓶", h2Fish: "捞瓶",
+    hintThrow: '在视频下面点「分享 → 复制链接」，回来贴到下面。<b style="color:var(--glow)">贴 1 到 5 条就够，一条也算一瓶</b>。YouTube 和 B站 都收，可以混着装。挑「你真的在看」的，别挑装点门面的。',
+    hintFish: "随机捞一个别人扔的瓶子，看看信息茧房外面长什么样。",
+    phLinks: "把链接贴在这里，一行一个\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
+    grabPc: "⚡ 电脑玩家进阶：一键抓取最近看的 10 条（手机用不了这招）",
+    grabPc1: "按 <b>Ctrl+Shift+B</b> 调出书签栏（就是地址栏下面那一条）",
+    grabPc2: "鼠标<b>按住</b>这个按钮别松手，拖到书签栏上再松开：",
+    grabPc3a: "打开 ", grabPc3b: " 或 ", grabPc3c: "，点一下书签栏里的「🍾 装瓶」，这一页就自动填好了",
+    grabMb: "📱 安卓进阶：从 YouTube 直接分享过来，不用复制粘贴",
+    grabMb1: "用 Chrome 打开本页，菜单里点「添加到主屏幕」",
+    grabMb2: "以后在 YouTube 点分享，选择列表里的「漂流瓶」，链接自己就进来了",
+    grabMb3: "可以连着分享好几条，攒够了一起扔（iPhone 用不了这招，还是复制粘贴）",
+    counter: ["已识别 ", " 个有效视频"],
+    btnThrow: "扔进海里", btnFish: "下网",
+    footer1: "捞到好东西，或者玩出毛病了？", footer2: "来 Discord 说一声：",
+    myNameNew: function (n) { return "你在海里的代号是 " + n + "，扔出去的瓶子都挂这个名"; },
+    myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
+    goodGot: function (g) { return "，收到 <b>" + g + "</b> 个 🌟"; },
+    fishedOnly: "，已经有人捞到过", drifting: "，还在海上漂",
+    cheer: function (n) { return "🌟 你不在的时候，又有 " + n + " 个人说你的瓶子有意思<br>要不要再扔一瓶"; },
+    folCount: function (n) { return "⭐ 你记住了 <b>" + n + "</b> 个瓶主，他们扔新瓶你会先捞到"; },
+    folAdd: "⭐ 记住这个瓶主", folDone: "✅ 已记住，他扔新瓶你会先捞到",
+    sealing: "封瓶中，正在抓取标题…",
+    biliFail: "这些 B站 链接找不到对应视频",
+    thrown: function (c) { return "🍾 装了 " + c + " 个视频的瓶子已经飘进海里"; },
+    throwFail: "扔瓶失败，再试一次", netErr: "网络出错，再试一次",
+    fishErr: "捞网断了，再试一次",
+    exhausted: "🏆 你把整片海都捞完了。<br>扔一瓶进去，等新瓶漂来。",
+    goThrow: "去扔一瓶",
+    emptySea: "这片海还没有瓶子。<br>先扔一个，等下一个路过的人。",
+    fromWho: "🧭 这瓶来自 ", seedNote: "（站里放的精选瓶）", followedNote: " · 你记住过的瓶主",
+    voteGood: "🌟 有意思", voteBad: "🫧 一般", shareBtn: "📋 分享这瓶",
+    voteDone: "收到，会影响这个瓶子以后被捞到的概率",
+    shareOk: "✅ 已复制，发到哪都行",
+    openIt: "打开看看是什么",
+    autofill: function (n) { return "⚡ 已自动装入 " + n + " 个视频，过一眼没问题就扔"; },
+    shared: "⚡ 收到分享的视频，可以继续分享几条再一起扔",
+    nudge: "🍾 你已经捞了 3 瓶别人的，海里还没有你的",
+    nudgeGo: "去扔一瓶", nudgeLater: "继续捞",
+    shareText: function (lines, origin) {
+      return "🍾 捞到一瓶陌生人正在看的片单：\n" + lines
+        + "\n\n这是 BK漂流瓶，大家把自己真实在看的视频扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
+    },
+  },
+  tw: {
+    sub: "把你最近在看的影片裝進瓶子扔進海裡，再撈一個陌生人的上來。",
+    seaHas: ["海裡現在有 ", " 個瓶子"],
+    tabThrow: "🍾 扔一個瓶子", tabFish: "🎣 撈一個瓶子",
+    h2Throw: "裝瓶", h2Fish: "撈瓶",
+    hintThrow: '在影片下面點「分享 → 複製連結」，回來貼到下面。<b style="color:var(--glow)">貼 1 到 5 條就夠，一條也算一瓶</b>。YouTube 和 B站 都收，可以混著裝。挑「你真的在看」的，別挑裝點門面的。',
+    hintFish: "隨機撈一個別人扔的瓶子，看看同溫層外面長什麼樣。",
+    phLinks: "把連結貼在這裡，一行一個\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
+    grabPc: "⚡ 電腦玩家進階：一鍵抓取最近看的 10 條（手機用不了這招）",
+    grabPc1: "按 <b>Ctrl+Shift+B</b> 叫出書籤列（就是網址列下面那一條）",
+    grabPc2: "滑鼠<b>按住</b>這個按鈕別放，拖到書籤列上再放開：",
+    grabPc3a: "打開 ", grabPc3b: " 或 ", grabPc3c: "，點一下書籤列裡的「🍾 裝瓶」，這一頁就自動填好了",
+    grabMb: "📱 安卓進階：從 YouTube 直接分享過來，不用複製貼上",
+    grabMb1: "用 Chrome 打開本頁，選單裡點「加到主畫面」",
+    grabMb2: "以後在 YouTube 點分享，清單裡選「漂流瓶」，連結自己就進來了",
+    grabMb3: "可以連著分享好幾條，攢夠了一起扔（iPhone 用不了這招，還是複製貼上）",
+    counter: ["已辨識 ", " 個有效影片"],
+    btnThrow: "扔進海裡", btnFish: "下網",
+    footer1: "撈到好東西，或者玩出毛病了？", footer2: "來 Discord 說一聲：",
+    myNameNew: function (n) { return "你在海裡的代號是 " + n + "，扔出去的瓶子都掛這個名"; },
+    myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
+    goodGot: function (g) { return "，收到 <b>" + g + "</b> 個 🌟"; },
+    fishedOnly: "，已經有人撈到過", drifting: "，還在海上漂",
+    cheer: function (n) { return "🌟 你不在的時候，又有 " + n + " 個人說你的瓶子有意思<br>要不要再扔一瓶"; },
+    folCount: function (n) { return "⭐ 你記住了 <b>" + n + "</b> 個瓶主，他們扔新瓶你會先撈到"; },
+    folAdd: "⭐ 記住這個瓶主", folDone: "✅ 已記住，他扔新瓶你會先撈到",
+    sealing: "封瓶中，正在抓取標題…",
+    biliFail: "這些 B站 連結找不到對應影片",
+    thrown: function (c) { return "🍾 裝了 " + c + " 個影片的瓶子已經飄進海裡"; },
+    throwFail: "扔瓶失敗，再試一次", netErr: "網路出錯，再試一次",
+    fishErr: "撈網斷了，再試一次",
+    exhausted: "🏆 你把整片海都撈完了。<br>扔一瓶進去，等新瓶漂來。",
+    goThrow: "去扔一瓶",
+    emptySea: "這片海還沒有瓶子。<br>先扔一個，等下一個路過的人。",
+    fromWho: "🧭 這瓶來自 ", seedNote: "（站裡放的精選瓶）", followedNote: " · 你記住過的瓶主",
+    voteGood: "🌟 有意思", voteBad: "🫧 普通", shareBtn: "📋 分享這瓶",
+    voteDone: "收到，會影響這個瓶子以後被撈到的機率",
+    shareOk: "✅ 已複製，發到哪都行",
+    openIt: "打開看看是什麼",
+    autofill: function (n) { return "⚡ 已自動裝入 " + n + " 個影片，過一眼沒問題就扔"; },
+    shared: "⚡ 收到分享的影片，可以繼續分享幾條再一起扔",
+    nudge: "🍾 你已經撈了 3 瓶別人的，海裡還沒有你的",
+    nudgeGo: "去扔一瓶", nudgeLater: "繼續撈",
+    shareText: function (lines, origin) {
+      return "🍾 撈到一瓶陌生人正在看的片單：\n" + lines
+        + "\n\n這是 BK漂流瓶，大家把自己真實在看的影片扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
+    },
+  },
+};
+
+var lang = localStorage.getItem("yb_lang");
+if (lang !== "cn" && lang !== "tw") {
+  lang = /zh-(TW|HK|MO)|zh-Hant/i.test(navigator.language || "") ? "tw" : "cn";
+}
+var T = I18N[lang];
+
+function applyLang() {
+  T = I18N[lang];
+  document.documentElement.lang = lang === "tw" ? "zh-Hant" : "zh-CN";
+  $("subTitle").innerHTML = T.sub + '<br>' + T.seaHas[0] + '<span id="stats">…</span>' + T.seaHas[1];
+  $("tabThrow").textContent = T.tabThrow;
+  $("tabFish").textContent = T.tabFish;
+  $("h2Throw").textContent = T.h2Throw;
+  $("h2Fish").textContent = T.h2Fish;
+  $("hintThrow").innerHTML = T.hintThrow;
+  $("hintFish").textContent = T.hintFish;
+  $("links").placeholder = T.phLinks;
+  $("grabPcSum").textContent = T.grabPc;
+  $("grabPc1").innerHTML = T.grabPc1;
+  $("grabPc2").innerHTML = T.grabPc2 + '<a class="bm" id="bookmarklet" href="#">🍾 ' + T.h2Throw + "</a>";
+  $("grabPc3").innerHTML = T.grabPc3a
+    + '<a href="https://www.youtube.com/feed/history" target="_blank" rel="noopener" style="color:var(--glow)">youtube.com/feed/history</a>'
+    + T.grabPc3b
+    + '<a href="https://www.bilibili.com/history" target="_blank" rel="noopener" style="color:var(--glow)">bilibili.com/history</a>'
+    + T.grabPc3c;
+  $("grabMbSum").textContent = T.grabMb;
+  $("grabMb1").textContent = T.grabMb1;
+  $("grabMb2").textContent = T.grabMb2;
+  $("grabMb3").textContent = T.grabMb3;
+  $("counterWrap").innerHTML = T.counter[0] + '<b id="parsed">0</b>' + T.counter[1];
+  $("btnThrow").textContent = T.btnThrow;
+  $("btnFish").textContent = T.btnFish;
+  $("footer1").textContent = T.footer1;
+  $("footer2").textContent = T.footer2;
+  $("langBtn").textContent = (lang === "tw" ? "繁" : "简") + " ▾";
+  document.querySelectorAll("#langMenu button").forEach(function (b) {
+    b.classList.toggle("on", b.dataset.lang === lang);
+  });
+  $("langMenu").classList.remove("open");
+  hideNudge();
+  bindBookmarklet();
+  refreshStats();
+  refreshMine();
+  refreshFolCount();
+  var ta = $("links");
+  if (ta.value) ta.dispatchEvent(new Event("input"));
+}
+
+function toggleLangMenu(e) {
+  if (e) e.stopPropagation();
+  $("langMenu").classList.toggle("open");
+}
+document.addEventListener("click", function () {
+  var m = document.getElementById("langMenu");
+  if (m) m.classList.remove("open");
+});
+
+function setLang(v) {
+  lang = v;
+  localStorage.setItem("yb_lang", v);
+  applyLang();
+}
+
+// 与服务端同一套算法,同一设备永远得到同一个代号
+var SEA_WORDS = [
+  "灯塔", "浮标", "罗盘", "鲸落", "暗流", "礁石", "贝壳", "海星", "水母", "珊瑚",
+  "潮汐", "海雾", "桅杆", "渔火", "涛声", "海沟", "洋流", "信天翁", "海豚", "旗鱼",
+  "玳瑁", "沉锚", "海图", "月光", "汽笛", "北斗", "远帆", "夜航", "冰山", "季风"
+];
+function nickname(dev) {
+  var h = 5381;
+  for (var i = 0; i < dev.length; i++) h = ((h * 33) ^ dev.charCodeAt(i)) >>> 0;
+  // 位数必须和服务端一致,否则自己看到的代号和别人看到的对不上
+  return SEA_WORDS[h % SEA_WORDS.length] + " " + ((h >>> 5) % 900 + 100);
+}
+
+function switchTab(name) {
+  $("tabThrow").classList.toggle("on", name === "throw");
+  $("tabFish").classList.toggle("on", name === "fish");
+  $("panelThrow").classList.toggle("on", name === "throw");
+  $("panelFish").classList.toggle("on", name === "fish");
+}
+$("tabThrow").onclick = function () { switchTab("throw"); };
+$("tabFish").onclick = function () { switchTab("fish"); };
+
+function refreshStats() {
+  fetch("/api/stats").then(function (r) { return r.json(); }).then(function (d) {
+    $("stats").textContent = d.count;
+  }).catch(function () { $("stats").textContent = "?"; });
+}
+// 回执:自己的瓶子被捞到、被点「有意思」,回来就能看见
+function refreshMine() {
+  fetch("/api/mine?device=" + encodeURIComponent(device))
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      myBottles = d.bottles || 0;
+      var name = "<b>" + nickname(device) + "</b>";
+      if (!d.bottles) {
+        $("myName").innerHTML = T.myNameNew(name);
+        return;
+      }
+      var t = T.myNameHas(name, d.bottles);
+      if (d.good) t += T.goodGot(d.good);
+      else if (d.fished) t += T.fishedOnly;
+      else t += T.drifting;
+      $("myName").innerHTML = t;
+
+      var last = localStorage.getItem("yb_lastgood");
+      if (last !== null && d.good > parseInt(last, 10)) {
+        var c = $("cheer");
+        c.innerHTML = T.cheer(d.good - parseInt(last, 10));
+        c.style.display = "block";
+      }
+      localStorage.setItem("yb_lastgood", String(d.good || 0));
+    })
+    .catch(function () {});
+}
+
+var ID_PATTERNS = [
+  /[?&]v=([A-Za-z0-9_-]{11})/,
+  /youtu\.be\/([A-Za-z0-9_-]{11})/,
+  /shorts\/([A-Za-z0-9_-]{11})/,
+  /embed\/([A-Za-z0-9_-]{11})/
+];
+var LIST_RE = /[?&]list=([A-Za-z0-9_-]{12,50})/;
+var BILI_PATTERNS = [
+  /bilibili\.com\/video\/(BV[A-Za-z0-9]{10})/,
+  /bilibili\.com\/video\/(av\d{1,12})/i,
+  /b23\.tv\/(BV[A-Za-z0-9]{10})/
+];
+function parseIds(text) {
+  var vids = [], lists = [], bilis = [], seen = {};
+  text.split(/\s+/).forEach(function (tok) {
+    if (!tok) return;
+    var i, m = null;
+    for (i = 0; i < BILI_PATTERNS.length; i++) {
+      m = tok.match(BILI_PATTERNS[i]);
+      if (m) break;
+      m = null;
+    }
+    if (!m && /^BV[A-Za-z0-9]{10}$/.test(tok)) m = [tok, tok];
+    if (m) {
+      if (!seen[m[1]]) { seen[m[1]] = 1; bilis.push(m[1]); }
+      return;
+    }
+    var vid = null;
+    for (i = 0; i < ID_PATTERNS.length; i++) {
+      m = tok.match(ID_PATTERNS[i]);
+      if (m) { vid = m[1]; break; }
+    }
+    if (!vid && /^[A-Za-z0-9_-]{11}$/.test(tok)) vid = tok;
+    if (vid) {
+      if (!seen[vid]) { seen[vid] = 1; vids.push(vid); }
+      return;
+    }
+    var lm = tok.match(LIST_RE);
+    if (lm && !seen[lm[1]]) { seen[lm[1]] = 1; lists.push(lm[1]); }
+  });
+  return { vids: vids.slice(0, 10), lists: lists.slice(0, 10), bilis: bilis.slice(0, 10) };
+}
+
+// B站接口整段封禁 Cloudflare 机房 IP,标题只能在扔瓶人自己的浏览器里拿
+function biliJsonp(id) {
+  return new Promise(function (resolve) {
+    var cb = "__ybcb" + Math.random().toString(36).slice(2);
+    var s = document.createElement("script");
+    var done = false;
+    function finish(v) {
+      if (done) return;
+      done = true;
+      try { delete window[cb]; } catch (e) { window[cb] = undefined; }
+      if (s.parentNode) s.parentNode.removeChild(s);
+      resolve(v);
+    }
+    window[cb] = function (d) {
+      if (d && d.code === 0 && d.data && d.data.title) {
+        finish({
+          id: id,
+          title: String(d.data.title).slice(0, 100),
+          author: String((d.data.owner && d.data.owner.name) || "").slice(0, 50),
+          thumb: String(d.data.pic || "").replace(/^http:/, "https:").slice(0, 300)
+        });
+      } else finish(null);
+    };
+    s.onerror = function () { finish(null); };
+    setTimeout(function () { finish(null); }, 6000);
+    var param = id.indexOf("BV") === 0 ? "bvid=" + id : "aid=" + id.slice(2);
+    s.src = "https://api.bilibili.com/x/web-interface/view?" + param + "&jsonp=jsonp&callback=" + cb;
+    document.body.appendChild(s);
+  });
+}
+
+$("links").addEventListener("input", function () {
+  var ids = parseIds($("links").value);
+  var n = ids.vids.length + ids.lists.length + ids.bilis.length;
+  $("parsed").textContent = n;
+  $("btnThrow").disabled = n === 0;
+});
+
+$("btnThrow").onclick = function () {
+  var ids = parseIds($("links").value);
+  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length) return;
+  $("btnThrow").disabled = true;
+  var msg = $("msgThrow");
+  msg.className = "msg";
+  msg.textContent = T.sealing;
+  Promise.all(ids.bilis.map(biliJsonp)).then(function (bmetas) {
+    var bilis = bmetas.filter(Boolean);
+    if (!ids.vids.length && !ids.lists.length && !bilis.length) {
+      msg.className = "msg err";
+      msg.textContent = T.biliFail;
+      $("btnThrow").disabled = false;
+      return;
+    }
+    return fetch("/api/throw", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ device: device, videos: ids.vids, lists: ids.lists, bilis: bilis })
+    }).then(function (r) { return r.json(); }).then(function (d) {
+      if (d.ok) {
+        msg.className = "msg ok";
+        msg.textContent = T.thrown(d.count);
+        $("links").value = ""; $("parsed").textContent = "0";
+        refreshStats();
+        refreshMine();
+      } else {
+        msg.className = "msg err";
+        msg.textContent = d.error || T.throwFail;
+        $("btnThrow").disabled = false;
+      }
+    });
+  }).catch(function () {
+    msg.className = "msg err";
+    msg.textContent = T.netErr;
+    $("btnThrow").disabled = false;
+  });
+};
+
+// 捞满 3 瓶还一瓶没扔的,软提示一次,可忽略继续捞;不做强制门槛
+var myBottles = null;
+var fishCount = parseInt(localStorage.getItem("yb_fishcount") || "0", 10);
+
+function hideNudge() { $("nudge").style.display = "none"; }
+
+function maybeNudge() {
+  fishCount++;
+  localStorage.setItem("yb_fishcount", String(fishCount));
+  if (fishCount < 3 || myBottles !== 0 || localStorage.getItem("yb_nudged")) return;
+  localStorage.setItem("yb_nudged", "1");
+  var n = $("nudge");
+  n.innerHTML = T.nudge
+    + '<div class="row">'
+    + '<button class="fol" onclick="hideNudge();switchTab(\'throw\')">' + T.nudgeGo + "</button>"
+    + '<button class="fol" onclick="hideNudge()">' + T.nudgeLater + "</button>"
+    + "</div>";
+  n.style.display = "block";
+}
+
+var lastBottle = null;
+function shareBottle() {
+  if (!lastBottle) return;
+  var lines = lastBottle.map(function (v) { return "· " + (v.title || "").slice(0, 42); });
+  var text = T.shareText(lines.join("\n"), location.origin);
+  function done() {
+    var b = document.getElementById("shareBtn");
+    if (b) b.textContent = T.shareOk;
+  }
+  function fallback() {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+function refreshFolCount() {
+  $("folCount").innerHTML = follow.length
+    ? T.folCount(follow.length) : "";
+}
+
+function toggleFollow(name) {
+  var i = follow.indexOf(name);
+  if (i < 0) follow.push(name); else follow.splice(i, 1);
+  if (follow.length > 50) follow = follow.slice(-50);
+  localStorage.setItem("yb_follow", JSON.stringify(follow));
+  var btn = $("folBtn");
+  if (btn) {
+    btn.textContent = follow.indexOf(name) < 0 ? T.folAdd : T.folDone;
+  }
+  refreshFolCount();
+}
+
+function vote(bottleId, verdict) {
+  fetch("/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bottle: bottleId, verdict: verdict, device: device })
+  }).catch(function () {});
+  var fb = document.getElementById("fb");
+  if (fb) fb.innerHTML = '<span class="done">' + T.voteDone + '</span>';
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, function (c) {
+    return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+  });
+}
+
+var BM_SRC = "(function(){var seen={},ids=[];"
+  + "document.querySelectorAll('a[href]').forEach(function(a){"
+  + "var m=a.href.match(/[?&]v=([A-Za-z0-9_-]{11})/)||a.href.match(/\\/shorts\\/([A-Za-z0-9_-]{11})/);"
+  + "if(m&&!seen[m[1]]){seen[m[1]]=1;ids.push(m[1])}});"
+  + "ids=ids.slice(0,10);"
+  + "if(!ids.length){alert('这一页没找到视频，先打开 youtube.com/feed/history 再点');return}"
+  + "window.open('" + location.origin + "/#vids='+ids.join(','))})()";
+// 语言切换会重建这个链接元素,所以每次都要重新挂
+function bindBookmarklet() {
+  var el = $("bookmarklet");
+  if (!el) return;
+  el.href = "javascript:" + encodeURIComponent(BM_SRC);
+  el.onclick = function (e) { e.preventDefault(); };
+}
+
+// 安卓装到桌面后,YouTube 的分享菜单里会出现本站,分享过来落到 /?share=...
+(function autofillFromShare() {
+  var q = new URLSearchParams(location.search);
+  var shared = [q.get("share"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
+  if (!shared) return;
+  var ids = parseIds(shared);
+  if (!ids.vids.length && !ids.lists.length) return;
+  history.replaceState(null, "", location.pathname);
+  switchTab("throw");
+  var ta = $("links");
+  var lines = ids.vids.map(function (v) { return "https://www.youtube.com/watch?v=" + v; })
+    .concat(ids.lists.map(function (x) { return "https://www.youtube.com/playlist?list=" + x; }));
+  ta.value = (ta.value ? ta.value.replace(/\s*$/, "\n") : "") + lines.join("\n");
+  ta.dispatchEvent(new Event("input"));
+  var msg = $("msgThrow");
+  msg.className = "msg ok";
+  msg.textContent = T.shared;
+})();
+
+(function autofillFromHash() {
+  var m = location.hash.match(/vids=([A-Za-z0-9_,-]+)/);
+  if (!m) return;
+  var ids = m[1].split(",").filter(function (v) {
+    return /^[A-Za-z0-9_-]{11}$/.test(v);
+  }).slice(0, 10);
+  if (!ids.length) return;
+  history.replaceState(null, "", location.pathname);
+  switchTab("throw");
+  var ta = $("links");
+  ta.value = ids.map(function (v) { return "https://www.youtube.com/watch?v=" + v; }).join("\n");
+  ta.dispatchEvent(new Event("input"));
+  var msg = $("msgThrow");
+  msg.className = "msg ok";
+  msg.textContent = T.autofill(ids.length);
+})();
+
+$("btnFish").onclick = function () {
+  var box = $("fishResult"), msg = $("msgFish");
+  msg.textContent = "";
+  box.innerHTML = '<div class="wave">🎣🌊</div>';
+  fetch("/api/fish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ device: device, seen: seen, follow: follow })
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (d.empty) {
+        if (d.exhausted) {
+          box.innerHTML = '<div id="fishEmpty">' + T.exhausted + '</div>'
+            + '<button class="big" onclick="switchTab(\'throw\')">' + T.goThrow + '</button>';
+        } else {
+          box.innerHTML = '<div id="fishEmpty">' + T.emptySea + '</div>';
+        }
+        return;
+      }
+      if (d.id && seen.indexOf(d.id) < 0) {
+        seen.push(d.id);
+        if (seen.length > 500) seen = seen.slice(-500);
+        localStorage.setItem("yb_seen", JSON.stringify(seen));
+      }
+      var html = "";
+      if (d.by) {
+        var already = follow.indexOf(d.by) >= 0;
+        html += '<div class="by">' + T.fromWho + "<b>" + esc(d.by) + "</b>"
+          + (already ? T.followedNote : "")
+          + (d.followable
+            ? '<br><button class="fol" id="folBtn" onclick="toggleFollow(\'' + esc(d.by) + '\')">'
+              + (already ? T.folDone : T.folAdd) + "</button>"
+            : "")
+          + "</div>";
+      }
+      html += '<div class="vlist">';
+      d.videos.forEach(function (v) {
+        var url, img, badge = "";
+        if (v.bvid) {
+          url = "https://www.bilibili.com/video/" + v.bvid;
+          img = v.thumb || "";
+          badge = '<span class="pf-b">B站</span>';
+        } else if (v.list) {
+          url = "https://www.youtube.com/playlist?list=" + v.list;
+          img = v.thumb || "";
+          badge = "📃 ";
+        } else {
+          url = "https://www.youtube.com/watch?v=" + v.vid;
+          img = "https://i.ytimg.com/vi/" + v.vid + "/mqdefault.jpg";
+        }
+        html += '<a class="vcard" href="' + url + '" target="_blank" rel="noopener">'
+          + '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
+          + '<div><div class="t">' + badge + esc(v.title || T.openIt) + "</div>"
+          + '<div class="u">' + url + "</div></div></a>";
+      });
+      html += "</div>"
+        + '<div class="wm">🌊 BK漂流瓶 · ' + location.host + "</div>"
+        + '<div class="fb" id="fb">'
+        + '<button onclick="vote(\'' + esc(d.id) + '\',\'good\')">' + T.voteGood + "</button>"
+        + '<button onclick="vote(\'' + esc(d.id) + '\',\'bad\')">' + T.voteBad + "</button>"
+        + '<button id="shareBtn" onclick="shareBottle()">' + T.shareBtn + "</button>"
+        + "</div>";
+      lastBottle = d.videos;
+      box.innerHTML = html;
+      maybeNudge();
+    })
+    .catch(function () {
+      box.innerHTML = "";
+      msg.className = "msg err";
+      msg.textContent = T.fishErr;
+    });
+};
+
+applyLang();  // 所有函数就位后再渲染界面文案
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("/sw.js").catch(function () {});
+}
+
+if (location.hash === "#autofish") {
+  switchTab("fish");
+  setTimeout(function () { $("btnFish").click(); }, 400);
+}
+</script>
+</body>
+</html>

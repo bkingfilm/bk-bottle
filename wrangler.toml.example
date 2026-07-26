@@ -1,0 +1,20 @@
+# 复制成 worker/wrangler.toml 后填入自己的 KV namespace id
+name = "yt-bottle"
+main = "src/index.js"
+compatibility_date = "2026-07-01"
+
+kv_namespaces = [
+  { binding = "BOTTLES", id = "YOUR_KV_NAMESPACE_ID" }
+]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
+[[rules]]
+type = "Data"
+globs = ["**/*.png"]
+
+# 每天 UTC 01:00 存一份数据快照 + 兜底扫描
+[triggers]
+crons = ["0 1 * * *"]
