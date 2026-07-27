@@ -3,7 +3,22 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BK漂流瓶</title>
+<title>BK漂流瓶 · 匿名交换陌生人正在看的视频</title>
+<meta name="description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
+<link rel="canonical" href="__ORIGIN__/">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="BK漂流瓶">
+<meta property="og:title" content="BK漂流瓶 · 匿名交换陌生人正在看的视频">
+<meta property="og:description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
+<meta property="og:url" content="__ORIGIN__/">
+<meta property="og:image" content="__ORIGIN__/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="zh_CN">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="BK漂流瓶 · 匿名交换陌生人正在看的视频">
+<meta name="twitter:description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
+<meta name="twitter:image" content="__ORIGIN__/og.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0d2c46">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -110,6 +125,16 @@ input[type=text] { margin-top: 12px; }
   color: var(--amber); font-size: 14px; line-height: 1.8;
 }
 #nudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+/* 装到桌面的提示。用青色跟琥珀色的 nudge 区分开:那个是社交提醒,这个是工具入口 */
+#install {
+  display: none; margin-top: 14px; padding: 13px 16px; text-align: center;
+  background: linear-gradient(135deg, rgba(77, 208, 225, .12), rgba(77, 208, 225, .05));
+  border: 1px solid rgba(77, 208, 225, .45); border-radius: 12px;
+  color: var(--glow); font-size: 14px; line-height: 1.8;
+}
+#install .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+#install .step { color: var(--dim); font-size: 13px; margin-top: 8px; line-height: 1.9; }
+#install .step b { color: var(--ink); }
 #overflow {
   display: none; margin-top: 12px; padding: 10px 14px; font-size: 13px; line-height: 1.7;
   background: rgba(255, 154, 138, .1); border: 1px solid rgba(255, 154, 138, .5);
@@ -239,6 +264,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <button class="big" id="btnFish"></button>
     <div class="msg" id="msgFish"></div>
     <div id="nudge"></div>
+    <div id="install"></div>
     <div id="fishResult" style="margin-top:16px"></div>
   </div>
 
@@ -259,6 +285,17 @@ var seen = [];
 try { seen = JSON.parse(localStorage.getItem("yb_seen") || "[]"); } catch (e) {}
 var follow = [];
 try { follow = JSON.parse(localStorage.getItem("yb_follow") || "[]"); } catch (e) {}
+var mySrc = "";
+try {
+  var q = new URLSearchParams(location.search).get("from");
+  if (q) q = q.replace(/[^a-z0-9_-]/gi, "").slice(0, 12);
+  mySrc = localStorage.getItem("yb_src") || "";
+  if (q && !mySrc) { mySrc = q; localStorage.setItem("yb_src", q); }
+  if (q) {
+    // 用完就把参数抹掉,免得用户把带来源的链接转发出去
+    history.replaceState(null, "", location.pathname + location.hash);
+  }
+} catch (e) {}
 
 function $(id) { return document.getElementById(id); }
 
@@ -311,6 +348,9 @@ var I18N = {
     },
     nudge: "🍾 你已经捞了 3 瓶别人的，海里还没有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "继续捞",
+    install: "🌊 装到桌面，下次想换换口味，点一下就进来了<br>不用注册，不会给你推消息",
+    installGo: "装到桌面", installLater: "不用了",
+    installIos: "点底下那个 <b>分享</b> 按钮，往下翻，选「<b>添加到主屏幕</b>」",
     shareText: function (lines, origin) {
       return "🍾 捞到一瓶陌生人正在看的片单：\n" + lines
         + "\n\n这是 BK漂流瓶，大家把自己真实在看的视频扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
@@ -363,6 +403,9 @@ var I18N = {
     },
     nudge: "🍾 你已經撈了 3 瓶別人的，海裡還沒有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "繼續撈",
+    install: "🌊 裝到桌面，下次想換換口味，點一下就進來了<br>不用註冊，不會給你推通知",
+    installGo: "裝到桌面", installLater: "不用了",
+    installIos: "點下面那個 <b>分享</b> 按鈕，往下滑，選「<b>加入主畫面</b>」",
     shareText: function (lines, origin) {
       return "🍾 撈到一瓶陌生人正在看的片單：\n" + lines
         + "\n\n這是 BK漂流瓶，大家把自己真實在看的影片扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
@@ -723,6 +766,56 @@ function maybeNudge() {
   n.style.display = "block";
 }
 
+// 装到桌面:工具型的东西没人天天来,想起来的时候能不能马上打开才是命。
+// 图标躺在桌面上,不用记网址也不用搜。捞到第 2 瓶再提(第 1 瓶还没建立起「有用」的判断),
+// 提过一次就不再烦,装不了的浏览器干脆不提,免得给出照做不了的指令。
+var deferredInstall = null;
+var isStandalone = false;
+try {
+  isStandalone = window.matchMedia("(display-mode: standalone)").matches
+    || navigator.standalone === true;
+} catch (e) {}
+
+window.addEventListener("beforeinstallprompt", function (e) {
+  e.preventDefault();
+  deferredInstall = e;
+});
+
+function hideInstall() { $("install").style.display = "none"; }
+
+function doInstall() {
+  hideInstall();
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall = null;
+}
+
+// iOS 没有 beforeinstallprompt,只有 Safari 本体能加主屏幕,壳浏览器都不行
+function iosSafari() {
+  var ua = navigator.userAgent;
+  var ios = /iphone|ipad|ipod/i.test(ua)
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  return ios && /safari/i.test(ua) && !/crios|fxios|edgios|micromessenger/i.test(ua);
+}
+
+function maybeInstall() {
+  if (isStandalone || localStorage.getItem("yb_installask")) return;
+  if (fishCount < 2) return;
+  // nudge 正占着位置就让它先说,下一瓶再提装桌面,不叠两条提示
+  if ($("nudge").style.display === "block") return;
+  var ios = iosSafari();
+  if (!deferredInstall && !ios) return;
+  localStorage.setItem("yb_installask", "1");
+  var n = $("install");
+  n.innerHTML = T.install
+    + (deferredInstall
+      ? '<div class="row"><button class="fol" onclick="doInstall()">' + T.installGo + "</button>"
+        + '<button class="fol" onclick="hideInstall()">' + T.installLater + "</button></div>"
+      : '<div class="step">' + T.installIos + "</div>"
+        + '<div class="row"><button class="fol" onclick="hideInstall()">' + T.installLater + "</button></div>");
+  n.style.display = "block";
+}
+
 var lastBottle = null;
 function shareBottle() {
   if (!lastBottle) return;
@@ -859,7 +952,7 @@ $("btnFish").onclick = function () {
   fetch("/api/fish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ device: device, seen: seen, follow: follow })
+    body: JSON.stringify({ device: device, seen: seen, follow: follow, src: mySrc, pwa: isStandalone })
   })
     .then(function (r) { return r.json(); })
     .then(function (d) {
@@ -918,6 +1011,7 @@ $("btnFish").onclick = function () {
       lastBottle = d.videos;
       box.innerHTML = html;
       maybeNudge();
+      maybeInstall();
     })
     .catch(function () {
       box.innerHTML = "";

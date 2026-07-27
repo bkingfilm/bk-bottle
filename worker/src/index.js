@@ -4,6 +4,7 @@
 import HTML from "./index.html";
 import ICON192 from "./icon-192.png";
 import ICON512 from "./icon-512.png";
+import OGIMG from "./og.png";
 
 // 装到手机桌面后,YouTube 分享菜单里会出现本站,分享的链接落到 /?share=...
 const MANIFEST = {
@@ -98,11 +99,18 @@ function nickname(device) {
   return SEA_WORDS[h % SEA_WORDS.length] + " " + ((h >>> 5) % 900 + 100);
 }
 
-function weight(meta) {
-  const g = (meta && meta.g) || 0;
-  const b = (meta && meta.b) || 0;
+const FRESH_WINDOW = 86400;   // 新瓶保护期,秒
+
+function weight(meta, now) {
+  const m = meta || {};
+  const g = m.g || 0, b = m.b || 0;
   // 差评降权 0.2:「一般」多为翻页式随手点,降太狠会把小池子里的瓶子误杀沉底
-  return Math.max(0.1, 1.0 + 0.5 * g - 0.2 * b);
+  let w = Math.max(0.1, 1.0 + 0.5 * g - 0.2 * b);
+  // 刚扔进来的头一天翻倍:扔瓶人贡献了就该被看见,否则一半的新瓶没人捞到过
+  if (m.t && now - m.t < FRESH_WINDOW) w *= 2;
+  // 种子瓶降权:真人瓶已经反超,站方内容该退居二线
+  if ((m.d || "").indexOf("seed") === 0) w *= 0.6;
+  return w;
 }
 
 function tooConcentrated(authors) {
@@ -229,22 +237,27 @@ async function handleThrow(req, reqUrl, env) {
   // 涉政/违规内容影子删除:对扔瓶人返回正常成功,实际存入 q: 隔离区
   const quarantine = hitsSensitive(valid);
   const id = (quarantine ? "q:" : "b:") + stamp;
-  const bottle = { id, device, videos: valid, votes: {}, fished: 0, ts: Math.floor(Date.now() / 1000) };
-  await env.BOTTLES.put(id, JSON.stringify(bottle), { metadata: { d: device, g: 0, b: 0, p } });
+  const nowSec = Math.floor(Date.now() / 1000);
+  const bottle = { id, device, videos: valid, votes: {}, fished: 0, ts: nowSec };
+  // t 存进 metadata,捞瓶加权时不必读正文就能判断新旧
+  await env.BOTTLES.put(id, JSON.stringify(bottle), { metadata: { d: device, g: 0, b: 0, p, t: nowSec } });
   invalidateIndex();  // 新瓶必须马上能被别人捞到
   return json({ ok: true, count: valid.length });
 }
 
 async function handleFish(req, reqUrl, env) {
-  let device = "", seen = new Set(), follow = new Set();
+  let device = "", seen = new Set(), follow = new Set(), src = "", pwa = false;
   if (req.method === "POST") {
     const body = await readBody(req, reqUrl);
     if (body.err) return body.err;
     device = String(body.data.device || "").slice(0, 64);
+    // 装到桌面打开的标记,搭访客登记那次写入的车,不额外花写额度
+    pwa = body.data.pwa === true;
     const arr = Array.isArray(body.data.seen) ? body.data.seen : [];
     seen = new Set(arr.filter((s) => typeof s === "string"));
     const fol = Array.isArray(body.data.follow) ? body.data.follow : [];
     follow = new Set(fol.filter((s) => typeof s === "string").slice(0, 50));
+    src = String(body.data.src || "").replace(/[^a-z0-9_-]/gi, "").slice(0, 12);
   } else {
     device = reqUrl.searchParams.get("device") || "";
   }
@@ -260,7 +273,8 @@ async function handleFish(req, reqUrl, env) {
     : [];
   const pool = fromFollowed.length && Math.random() < 0.7 ? fromFollowed : others;
 
-  const weights = pool.map((k) => weight(k.metadata));
+  const nowSec = Math.floor(Date.now() / 1000);
+  const weights = pool.map((k) => weight(k.metadata, nowSec));
   let r = Math.random() * weights.reduce((a, b) => a + b, 0);
   let picked = pool[0];
   for (let i = 0; i < pool.length; i++) {
@@ -276,13 +290,20 @@ async function handleFish(req, reqUrl, env) {
       const today = new Date().toISOString().slice(0, 10);
       const got = await env.BOTTLES.getWithMetadata(vkey);
       if (got.value === null && !got.metadata) {
-        await env.BOTTLES.put(vkey, "1", { metadata: { f: today, l: today, d: 1 } });
+        // s 记首次来源渠道,之后不再改写,用来分辨哪条推广真的带来了人
+        const meta = { f: today, l: today, d: 1, s: src || "direct" };
+        if (pwa) meta.w = 1;
+        await env.BOTTLES.put(vkey, "1", { metadata: meta });
       } else {
         const m = got.metadata || {};
-        if (m.l !== today) {
-          await env.BOTTLES.put(vkey, "1", {
-            metadata: { f: m.f || today, l: today, d: (m.d || 1) + 1 },
-          });
+        // w 一旦置上就不回退:装了桌面的人偶尔从浏览器进,不该把他算回没装。
+        // 当天已登记但这次是从桌面进来的,补写一次,不然要等到第二天才统计得到
+        const newW = m.w || (pwa ? 1 : 0);
+        if (m.l !== today || newW !== (m.w || 0)) {
+          const meta = { f: m.f || today, l: today, s: m.s || src || "direct",
+            d: m.l !== today ? (m.d || 1) + 1 : (m.d || 1) };
+          if (newW) meta.w = 1;
+          await env.BOTTLES.put(vkey, "1", { metadata: meta });
         }
       }
     } catch (e) { /* 额度用尽就先不记 */ }
@@ -342,6 +363,7 @@ async function handleFeedback(req, reqUrl, env) {
       g, b,
       p: (got.metadata && got.metadata.p) || bottlePlatform(bottle.videos || []),
       f: bottle.fished || (got.metadata && got.metadata.f) || 0,
+      t: (got.metadata && got.metadata.t) || bottle.ts || 0,   // 别把新瓶保护期投没了
     },
   });
   invalidateIndex();  // 让回执立刻反映新的好评
@@ -375,10 +397,21 @@ async function collectStats(env) {
   const visitors = vl.keys.length;
   // 回访 = 在不同的日子来过两天以上
   const returning = vl.keys.filter((k) => ((k.metadata || {}).d || 1) >= 2).length;
+  // 装到桌面 = 至少有一次是从主屏幕图标(standalone)进来的
+  const installed = vl.keys.filter((k) => (k.metadata || {}).w).length;
+  // 按来源渠道分组:哪条推广真的带来了人,又有多少人回来过
+  const bySrc = {};
+  vl.keys.forEach((k) => {
+    const m = k.metadata || {};
+    const s = m.s || "unknown";
+    if (!bySrc[s]) bySrc[s] = { n: 0, back: 0 };
+    bySrc[s].n++;
+    if ((m.d || 1) >= 2) bySrc[s].back++;
+  });
   return {
     total: keys.length, real, devices: devices.size,
-    visitors, returning, visitorsCapped: !vl.list_complete,
-    fishedTotal, good, bad, rows,
+    visitors, returning, installed, visitorsCapped: !vl.list_complete,
+    bySrc, fishedTotal, good, bad, rows,
   };
 }
 
@@ -412,6 +445,10 @@ async function handleAdmin(url, env) {
     + "<div>扔瓶转化率<b>"
     + (s.visitors ? Math.round((s.devices / s.visitors) * 100) + "%" : "—")
     + "</b></div>"
+    + "<div>装到桌面的人<b>" + s.installed + "</b></div>"
+    + "<div>装桌面率<b>"
+    + (s.visitors ? Math.round((s.installed / s.visitors) * 100) + "%" : "—")
+    + "</b></div>"
     + "<div>回来过的人<b>" + s.returning + "</b></div>"
     + "<div>回访率<b>"
     + (s.visitors ? Math.round((s.returning / s.visitors) * 100) + "%" : "—")
@@ -419,6 +456,16 @@ async function handleAdmin(url, env) {
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
     + "<div>🌟 有意思<b>" + s.good + "</b></div>"
     + "<div>🫧 一般<b>" + s.bad + "</b></div></div>";
+  const srcRows = Object.keys(s.bySrc).sort((a, b) => s.bySrc[b].n - s.bySrc[a].n);
+  if (srcRows.length) {
+    html += "<h2>来源渠道</h2><div class=overflow><table>"
+      + "<tr><th>来源</th><th>捞过瓶的人</th><th>其中回来过</th></tr>";
+    for (const k of srcRows) {
+      html += "<tr><td>" + esc(k) + "</td><td>" + s.bySrc[k].n
+        + "</td><td>" + s.bySrc[k].back + "</td></tr>";
+    }
+    html += "</table></div>";
+  }
   if (days.length) {
     html += "<h2>每日快照（北京时间每早 9 点存档）</h2><div class=overflow><table>"
       + "<tr><th>日期</th><th>总瓶</th><th>真人瓶</th><th>设备</th><th>累计被捞</th></tr>";
@@ -466,7 +513,9 @@ export default {
     const p = url.pathname;
     if (req.method === "GET") {
       if (p === "/" || p === "/index.html") {
-        return new Response(HTML, { headers: { "Content-Type": "text/html; charset=utf-8" } });
+        // 分享卡片的 og 标签要绝对地址,注入当前 origin,换域名不用改 HTML
+        const html = HTML.split("__ORIGIN__").join(url.origin);
+        return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
       }
       if (p === "/manifest.webmanifest") {
         return new Response(JSON.stringify(MANIFEST), {
@@ -480,6 +529,12 @@ export default {
       }
       if (p === "/icon-192.png" || p === "/icon-512.png") {
         return new Response(p === "/icon-192.png" ? ICON192 : ICON512, {
+          headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
+        });
+      }
+      // 分享卡片的缩略图。各平台的抓取器缓存很久,换域名重做图后记得让它们重新抓
+      if (p === "/og.png") {
+        return new Response(OGIMG, {
           headers: { "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" },
         });
       }

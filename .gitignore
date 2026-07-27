@@ -6,6 +6,8 @@ worker/removed-politics-*.json
 # 后台密钥
 worker/admin-key.txt
 *.key
+.dev.vars
+worker/.dev.vars
 
 # 运行时产物
 __pycache__/
