@@ -1,0 +1,30 @@
+/* 注入到 YouTube / B站 的按钮。
+   两边都有浅色和深色主题,所以不写死配色:文字颜色继承宿主(color: inherit),
+   底色透明,只靠一圈青边表明身份。这样在 B站的白底和 YouTube 的黑底上都不突兀,
+   也不会看着像塞进来的广告。 */
+.ybottle-btn {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  margin-left: 8px;
+  padding: 0 14px;
+  border: 1px solid rgba(77, 208, 225, .85);
+  border-radius: 18px;
+  background: transparent;
+  color: inherit;
+  font: 500 13px/1 -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+
+.ybottle-btn:hover {
+  background: rgba(77, 208, 225, .14);
+  border-color: #4dd0e1;
+}
+
+/* 装进去之后闪一下确认,1.8 秒后自己变回来 */
+.ybottle-btn.ybottle-ok {
+  border-color: #ffb02e;
+  background: rgba(255, 176, 46, .14);
+}

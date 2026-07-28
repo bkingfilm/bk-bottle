@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>BK漂流瓶</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="popup.css">
+</head>
+<body class="popup">
+<div class="bar">
+  <span class="brand">🌊 BK漂流瓶</span>
+  <span class="who" id="who"></span>
+</div>
+
+<div class="receipt" id="receipt"></div>
+
+<div class="group">
+  <div id="box"><div class="wave">🎣🌊</div></div>
+  <div class="row" style="margin-top:10px">
+    <span id="goodWrap" class="half"></span>
+    <button class="primary" id="btnAgain">🎣 再捞一个</button>
+  </div>
+</div>
+
+<div class="group" id="pgroup">
+  <div class="sec fold" id="psec">
+    <span>🍾 待扔的瓶子 <span class="arrow">▾</span></span>
+    <span id="pcount"></span>
+  </div>
+  <div id="pending" class="plist cap"></div>
+  <div class="row">
+    <button class="ghost" id="btnThrow" style="flex:1">扔进海里</button>
+  </div>
+</div>
+
+<div class="foot">
+  <a href="https://b.bking.film/" target="_blank" rel="noopener">b.bking.film</a>
+  <span>v0.1.0</span>
+</div>
+
+<script src="lib.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>

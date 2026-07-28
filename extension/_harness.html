@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>harness · 不打包</title>
+<link rel="stylesheet" href="base.css">
+<link rel="stylesheet" href="popup.css">
+<style>
+  /* 开发壳子:把 popup 摆在深色底上,好看清它真实的边界。
+     红线画在 600px 处 —— Chrome 的 popup 高度上限,内容压过这条线就会出滚动条 */
+  html { background: #02080f; padding: 20px; }
+  body.popup { border: 1px solid #1e4a6d; border-radius: 12px; position: relative; }
+  html::after {
+    content: "600px · Chrome popup 上限";
+    position: absolute; left: 20px; top: 620px; width: 380px;
+    border-top: 1px dashed #ff6b6b; color: #ff6b6b;
+    font: 11px/1.6 monospace; padding-top: 2px;
+  }
+</style>
+</head>
+<!-- 把 chrome.* 和 fetch 换成假的,好在普通浏览器里验证面板的渲染和交互。
+     不进发布包(pack.py 排除下划线开头的文件)。
+     要看新标签页版式,把 body 的 class 换成 newtab 并改引 newtab.css。 -->
+<body class="popup">
+<div class="bar">
+  <span class="brand">🌊 BK漂流瓶</span>
+  <span class="who" id="who"></span>
+</div>
+
+<div class="receipt" id="receipt"></div>
+
+<div class="group">
+  <div id="box"><div class="wave">🎣🌊</div></div>
+  <div class="row" style="margin-top:10px">
+    <span id="goodWrap" class="half"></span>
+    <button class="primary" id="btnAgain">🎣 再捞一个</button>
+  </div>
+</div>
+
+<div class="group" id="pgroup">
+  <div class="sec fold" id="psec">
+    <span>🍾 待扔的瓶子 <span class="arrow">▾</span></span>
+    <span id="pcount"></span>
+  </div>
+  <div id="pending" class="plist cap"></div>
+  <div class="row">
+    <button class="ghost" id="btnThrow" style="flex:1">扔进海里</button>
+  </div>
+</div>
+
+<div class="foot">
+  <a href="https://b.bking.film/" target="_blank" rel="noopener">b.bking.film</a>
+  <span>v0.1.0</span>
+</div>
+
+<script>
+window.__log = [];
+var __mem = {
+  device: "devtest123",
+  lastGood: 3,
+  // 想验证「有待扔内容」的版式,把下面这行的 [] 换成上面注释里那两条示例
+  pending: [],
+};
+window.chrome = {
+  storage: {
+    local: {
+      get: function (keys, cb) {
+        var out = {};
+        (Array.isArray(keys) ? keys : [keys]).forEach(function (k) { out[k] = __mem[k]; });
+        cb(out);
+      },
+      set: function (obj, cb) {
+        Object.keys(obj).forEach(function (k) { __mem[k] = obj[k]; });
+        window.__log.push("set:" + Object.keys(obj).join(","));
+        if (cb) cb();
+      },
+    },
+    onChanged: { addListener: function () {} },
+  },
+  action: { setBadgeText: function () {}, setBadgeBackgroundColor: function () {} },
+  tabs: { create: function (o) { window.__log.push("tabs.create:" + o.url); } },
+  runtime: { onInstalled: { addListener: function () {} }, onStartup: { addListener: function () {} } },
+};
+
+var FAKE = {
+  id: "b:fake1",
+  by: "灯塔 280",
+  videos: [
+    { vid: "dQw4w9WgXcQ", title: "【鬼谷说】是什么“化石”让古生物学家集体破防？" },
+    { bvid: "BV1xx411c7mD", title: "上世纪的老车床是如何精加工卡丁车车轴上的法兰盘",
+      thumb: "https://i2.hdslb.com/bfs/archive/a06f452c204053d1eba7d8042e4d500d2946d92e.jpg" },
+    { vid: "SIh-2WepUHs", title: "海霸阿烽出海搞回100只特级黄金扇贝，加粉丝烧烤一次吃过瘾" },
+  ],
+};
+window.__fishCalls = 0;
+window.fetch = function (url) {
+  window.__log.push("fetch:" + url);
+  if (url.indexOf("/api/fish") >= 0) {
+    window.__fishCalls++;
+    var body = window.__fishCalls > 2 ? { empty: true, exhausted: true } : FAKE;
+    return Promise.resolve({ json: function () { return Promise.resolve(body); } });
+  }
+  if (url.indexOf("/api/mine") >= 0) {
+    return Promise.resolve({ json: function () {
+      return Promise.resolve({ bottles: 2, good: 5, fished: 9, name: "灯塔 411" });
+    } });
+  }
+  return Promise.resolve({ json: function () { return Promise.resolve({ ok: true }); } });
+};
+</script>
+<script src="lib.js"></script>
+<script src="panel.js"></script>
+</body>
+</html>

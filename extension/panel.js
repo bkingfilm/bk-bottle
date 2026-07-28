@@ -1,0 +1,211 @@
+// 捞瓶面板的全部逻辑。popup 和新标签页共用这一份,两边的 HTML 骨架也一样,
+// 只有外层宽度不同(popup.css / newtab.css),所以同一套代码不用改。
+var state = {
+  device: "", seen: [], follow: [], liked: [], pending: [],
+  lastBottle: null, lastBy: "", lastId: "", myName: "",
+};
+
+var box, pbox, btnThrow, elWho, elReceipt;
+
+document.addEventListener("DOMContentLoaded", function () {
+  box = document.getElementById("box");
+  pbox = document.getElementById("pending");
+  btnThrow = document.getElementById("btnThrow");
+  elWho = document.getElementById("who");
+  elReceipt = document.getElementById("receipt");
+
+  btnThrow.onclick = throwPending;
+  document.getElementById("btnAgain").onclick = fish;
+
+  // popup 高度有限,清单默认收起;新标签页地方够,直接摊开
+  var sec = document.getElementById("psec");
+  if (sec) {
+    if (isPopup()) pbox.classList.add("hide");
+    else sec.classList.add("open");
+    sec.onclick = function () {
+      sec.classList.toggle("open");
+      pbox.classList.toggle("hide");
+    };
+  }
+
+  load(["device", "seen", "follow", "liked", "pending", "lastGood"]).then(function (d) {
+    state.device = d.device || "";
+    state.seen = Array.isArray(d.seen) ? d.seen : [];
+    state.follow = Array.isArray(d.follow) ? d.follow : [];
+    state.liked = Array.isArray(d.liked) ? d.liked : [];
+    state.pending = Array.isArray(d.pending) ? d.pending : [];
+    drawPending();
+    fish();
+    if (state.device) receipt(d.lastGood || 0);
+    else hintBind();
+  });
+});
+
+// 没跟网页对接过就还没有身份,提示一句。瓶子照样能捞,只是不算在他名下
+function hintBind() {
+  elWho.innerHTML = '<a id="bindLink" href="#" style="color:var(--amber)">未连接身份</a>';
+  var a = document.getElementById("bindLink");
+  if (a) a.onclick = function (e) { e.preventDefault(); openSite("/"); };
+}
+
+function fish() {
+  box.innerHTML = '<div class="wave">🎣🌊</div>';
+  fetch(API + "/api/fish", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      device: state.device, seen: state.seen, follow: state.follow, src: "chrome-ext",
+    }),
+  })
+    .then(function (r) { return r.json(); })
+    .then(render)
+    .catch(function () {
+      box.innerHTML = '<div class="empty">捞网断了，再试一次</div>';
+    });
+}
+
+function render(d) {
+  if (d.empty) {
+    box.innerHTML = '<div class="empty">'
+      + (d.exhausted ? "🏆 你把整片海都捞完了<br>扔一瓶进去，等新瓶漂来"
+                     : "这片海还没有瓶子<br>先扔一个，等下一个路过的人")
+      + "</div>" + likedHtml();
+    var w = document.getElementById("goodWrap");
+    if (w) w.innerHTML = "";   // 没瓶子可评,这一格空着,让「再捞一个」占满
+    return;
+  }
+  if (d.id && state.seen.indexOf(d.id) < 0) {
+    state.seen.push(d.id);
+    if (state.seen.length > 500) state.seen = state.seen.slice(-500);
+    save({ seen: state.seen });
+  }
+  state.lastBottle = d.videos || [];
+  state.lastBy = d.by || "";
+  state.lastId = d.id || "";
+
+  var html = "";
+  if (d.by) {
+    html += '<div class="by">🧭 这瓶来自 <b>' + esc(d.by) + "</b>"
+      + (state.follow.indexOf(d.by) >= 0 ? " · 你记住过的瓶主" : "") + "</div>";
+  }
+  html += '<div class="vlist cap">' + (d.videos || []).map(cardHtml).join("") + "</div>";
+  box.innerHTML = html;
+  showGood();
+}
+
+// 「有意思」跟「再捞一个」并排在 box 外面的那一排里,所以换瓶时要把它重置回可点状态
+function showGood() {
+  var w = document.getElementById("goodWrap");
+  if (!w) return;
+  w.innerHTML = '<button class="ghost" id="goodBtn">🌟 有意思</button>';
+  document.getElementById("goodBtn").onclick = good;
+}
+
+function cardHtml(v) {
+  var badge = v.bvid ? '<span class="pf-b">B站</span>' : (v.list ? "📃 " : "");
+  var host = v.bvid ? "bilibili.com" : "youtube.com";
+  return '<a class="vcard" href="' + esc(itemUrl(v)) + '" target="_blank" rel="noopener">'
+    + '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(itemThumb(v)) + '" alt="">'
+    + '<div><div class="t">' + badge + esc(v.title || "打开看看是什么") + "</div>"
+    + '<div class="u">' + host + "</div></div></a>";
+}
+
+// 和网页一样只发正信号,没有「一般」:想走的人直接点「再捞一个」
+function good() {
+  var w = document.getElementById("goodWrap");
+  if (w) w.innerHTML = '<span class="done">🌟 已记下</span>';
+  if (!state.lastBottle || !state.lastId) return;
+  fetch(API + "/api/feedback", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ bottle: state.lastId, verdict: "good", device: state.device }),
+  }).catch(function () {});
+  state.liked.push({ by: state.lastBy, v: state.lastBottle });
+  if (state.liked.length > 20) state.liked = state.liked.slice(-20);
+  save({ liked: state.liked });
+}
+
+// 捞空之后不能是死胡同,把说过有意思的几瓶留着当收藏夹(纯本地)
+function likedHtml() {
+  if (!state.liked.length) return "";
+  return '<div class="by" style="margin-top:16px">你说过有意思的这几瓶：</div>'
+    + '<div class="vlist">'
+    + state.liked.slice().reverse().slice(0, 4)
+        .map(function (x) { return (x.v || []).map(cardHtml).join(""); }).join("")
+    + "</div>";
+}
+
+function drawPending() {
+  var n = state.pending.length;
+  var grp = document.getElementById("pgroup");
+  document.getElementById("pcount").innerHTML = n ? "<b>" + n + "</b> / 10" : "";
+  btnThrow.disabled = !n;
+  // 空清单收成一行,别让一个不能按的按钮白占 popup 的高度
+  if (grp) grp.classList.toggle("lean", !n);
+  if (!n) {
+    document.getElementById("psec").firstElementChild.innerHTML =
+      "🍾 在 YouTube 或 B站 点「装进瓶子」，攒好一起扔";
+    pbox.innerHTML = "";
+    pbox.classList.add("hide");
+    return;
+  }
+  document.getElementById("psec").firstElementChild.innerHTML =
+    '🍾 待扔的瓶子 <span class="arrow">▾</span>';
+  pbox.innerHTML = "";
+  state.pending.forEach(function (v, i) {
+    var row = document.createElement("div");
+    row.className = "prow";
+    row.innerHTML = '<span class="pf">' + (v.bvid ? "B站" : "YT") + "</span>"
+      + '<span class="t">' + esc(v.title || itemKey(v)) + "</span>";
+    var del = document.createElement("button");
+    del.className = "del";
+    del.title = "拿出来";
+    del.textContent = "✕";
+    del.onclick = function () {
+      state.pending.splice(i, 1);
+      save({ pending: state.pending }).then(drawPending);
+    };
+    row.appendChild(del);
+    pbox.appendChild(row);
+  });
+}
+
+// 扔瓶交给网页:插件只把清单塞进 hash,由 b.bking.film 装填,你过一眼再提交。
+// 这样瓶主永远是网页那个身份,回执才不会断(插件从不写后端)
+function throwPending() {
+  if (!state.pending.length) return;
+  var url = pendingHash(state.pending);
+  save({ pending: [] }).then(function () {
+    state.pending = [];
+    drawPending();
+    chrome.tabs.create({ url: url });
+    if (isPopup()) window.close();
+  });
+}
+
+function openSite(path) {
+  chrome.tabs.create({ url: API + path });
+  if (isPopup()) window.close();
+}
+
+function isPopup() {
+  return document.body.classList.contains("popup");
+}
+
+// 回执:自己的瓶子被人说有意思。插件对回访真正的作用在这句话 ——
+// 网页版得等他自己想起来回来才看得到
+function receipt(lastGood) {
+  fetch(API + "/api/mine?device=" + encodeURIComponent(state.device))
+    .then(function (r) { return r.json(); })
+    .then(function (m) {
+      var g = m.good || 0;
+      if (g > lastGood) {
+        elReceipt.textContent = "🌟 又有 " + (g - lastGood) + " 个人说你的瓶子有意思";
+        elReceipt.classList.add("on");
+      }
+      state.myName = m.name || "";
+      if (state.myName) elWho.innerHTML = "你是 <b>" + esc(state.myName) + "</b>";
+      save({ lastGood: g });
+    })
+    .catch(function () {});
+}
