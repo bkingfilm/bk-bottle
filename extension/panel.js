@@ -139,12 +139,14 @@ function drawPending() {
   var n = state.pending.length;
   var grp = document.getElementById("pgroup");
   document.getElementById("pcount").innerHTML = n ? "<b>" + n + "</b> / 10" : "";
-  btnThrow.disabled = !n;
-  // 空清单收成一行,别让一个不能按的按钮白占 popup 的高度
+  // 空清单收成一行,但按钮始终可点 —— 禁用或藏起来的话,面板里就没有扔瓶的
+  // 入口了,想扔的人只看到一行说明文字,不知道该点哪(2026-07-28 BK 反馈)
   if (grp) grp.classList.toggle("lean", !n);
+  btnThrow.textContent = n ? "扔进海里" : "🍾 去网页扔一瓶";
+  btnThrow.disabled = false;
   if (!n) {
     document.getElementById("psec").firstElementChild.innerHTML =
-      "🍾 在 YouTube 或 B站 点「装进瓶子」，攒好一起扔";
+      "在 YouTube 或 B站 点「装进瓶子」可以攒着一起扔";
     pbox.innerHTML = "";
     pbox.classList.add("hide");
     return;
@@ -173,7 +175,8 @@ function drawPending() {
 // 扔瓶交给网页:插件只把清单塞进 hash,由 b.bking.film 装填,你过一眼再提交。
 // 这样瓶主永远是网页那个身份,回执才不会断(插件从不写后端)
 function throwPending() {
-  if (!state.pending.length) return;
+  // 清单空着也能点:直接把网页的扔瓶页打开,手动贴链接照样能扔
+  if (!state.pending.length) { openSite("/#throw"); return; }
   var url = pendingHash(state.pending);
   save({ pending: [] }).then(function () {
     state.pending = [];

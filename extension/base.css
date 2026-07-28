@@ -242,9 +242,8 @@ button {
   margin-top: 4px;
 }
 
-#pgroup.lean .sec { margin-bottom: 0; }
-#pgroup.lean .arrow,
-#pgroup.lean .row { display: none; }
+#pgroup.lean .sec { margin-bottom: 9px; }
+#pgroup.lean .arrow { display: none; }
 
 /* 瓶子里视频多的时候让列表自己滚,别把整个面板顶长 */
 .vlist.cap { max-height: 268px; overflow-y: auto; padding-right: 2px; }

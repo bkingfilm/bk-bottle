@@ -1195,6 +1195,12 @@ if (location.hash === "#autofish") {
   setTimeout(function () { $("btnFish").click(); }, 400);
 }
 
+// 插件面板里「去网页扔一瓶」落到这里:清单是空的,直接把扔瓶页摆到面前
+if (location.hash === "#throw") {
+  switchTab("throw");
+  setTimeout(function () { var t = $("links"); if (t) t.focus(); }, 300);
+}
+
 // 首访自动捞一网演示:新人 3 秒看懂这是什么。只演一次,不计任何统计;
 // 带分享/书签参数进来的人有明确目的,不打断
 (function demoFish() {
