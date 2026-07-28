@@ -83,6 +83,14 @@ for page in [p for p in (popup, *(m.get("chrome_url_overrides") or {}).values())
 if m.get("manifest_version") != 3:
     errs.append("manifest_version 不是 3")
 
+# 不许接管用户的新标签页/主页。2026-07-28 加过一次,当天被 BK 否掉:
+# 改别人的新标签页等于把人家主页换了,是浏览器插件里最招人恨的一类行为,而且跟
+# 「不读你的记录、不要你的账号、不给你算法」这套立意直接冲突。为回访指标去动
+# 用户的领地,正是这个产品该反对的事。这条是硬红线,不是可以再权衡的取舍。
+if m.get("chrome_url_overrides"):
+    errs.append("manifest 里有 chrome_url_overrides(%s)—— 不许接管用户的新标签页"
+                "或主页,这是硬红线" % ",".join(m["chrome_url_overrides"].keys()))
+
 # 权限越少越好:history 一旦申请,商店安装页会显示「读取浏览记录」
 for p in m.get("permissions", []):
     if p in ("history", "tabs", "browsingData", "cookies"):

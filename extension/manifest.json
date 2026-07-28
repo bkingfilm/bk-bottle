@@ -16,7 +16,6 @@
     "https://www.bilibili.com/*"
   ],
   "background": { "service_worker": "sw.js" },
-  "chrome_url_overrides": { "newtab": "newtab.html" },
   "action": {
     "default_title": "BK漂流瓶 · 捞一个",
     "default_popup": "popup.html"

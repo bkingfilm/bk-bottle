@@ -1,5 +1,9 @@
-// 捞瓶面板的全部逻辑。popup 和新标签页共用这一份,两边的 HTML 骨架也一样,
-// 只有外层宽度不同(popup.css / newtab.css),所以同一套代码不用改。
+// 捞瓶面板的全部逻辑。入口只有一个:点工具栏图标弹出的 popup。
+//
+// 这里不接管新标签页。2026-07-28 曾经加过 chrome_url_overrides,当天被 BK 否掉:
+// 改别人的新标签页等于把人家主页换了,是浏览器插件里最招人恨的一类行为,而且跟
+// 这个产品「不读你的记录、不要你的账号、不给你算法」的立意直接冲突 —— 为了回访
+// 指标去动用户的领地,正是它该反对的事。check.py 里有一条硬检查守着,别再加回来。
 var state = {
   device: "", seen: [], follow: [], liked: [], pending: [],
   lastBottle: null, lastBy: "", lastId: "", myName: "",
@@ -17,11 +21,10 @@ document.addEventListener("DOMContentLoaded", function () {
   btnThrow.onclick = throwPending;
   document.getElementById("btnAgain").onclick = fish;
 
-  // popup 高度有限,清单默认收起;新标签页地方够,直接摊开
+  // popup 高度有限,清单默认收起
   var sec = document.getElementById("psec");
   if (sec) {
-    if (isPopup()) pbox.classList.add("hide");
-    else sec.classList.add("open");
+    pbox.classList.add("hide");
     sec.onclick = function () {
       sec.classList.toggle("open");
       pbox.classList.toggle("hide");
@@ -224,12 +227,9 @@ function note(text, kind) {
 
 function openSite(path) {
   chrome.tabs.create({ url: API + path });
-  if (isPopup()) window.close();
+  window.close();
 }
 
-function isPopup() {
-  return document.body.classList.contains("popup");
-}
 
 // 回执:自己的瓶子被人说有意思。插件对回访真正的作用在这句话 ——
 // 网页版得等他自己想起来回来才看得到
