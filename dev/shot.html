@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>商店截图 1280x800</title>
+<link rel="stylesheet" href="../extension/base.css">
+<link rel="stylesheet" href="../extension/popup.css">
+<style>
+  /* 商店截图专用画布:1280x800 是 Edge / Chrome 商店的标准尺寸。
+     把真实的 popup 面板摆在中间,左边写一句它是干什么的。
+     不进发布包(在 dev/ 下)。 */
+  html, body { margin: 0; padding: 0; }
+  html {
+    width: 1280px; height: 800px; overflow: hidden;
+    background: radial-gradient(ellipse at 22% 12%, #0d2c46, #04101d 72%);
+    display: flex; align-items: center; justify-content: center; gap: 64px;
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  }
+  .pitch { width: 470px; color: #e8f2fa; }
+  .pitch h1 { font-size: 34px; line-height: 1.35; margin: 0 0 18px; letter-spacing: .5px; }
+  .pitch h1 b { color: #4dd0e1; }
+  .pitch p { font-size: 16.5px; line-height: 1.9; color: #8fb3cc; margin: 0 0 14px; }
+  .pitch ul { margin: 20px 0 0; padding: 0; list-style: none; }
+  .pitch li {
+    font-size: 15px; color: #c9dceb; padding: 7px 0 7px 26px; position: relative;
+  }
+  .pitch li::before {
+    content: "✓"; position: absolute; left: 0; color: #4dd0e1; font-weight: 700;
+  }
+  .addr {
+    display: inline-block; margin-top: 22px; padding: 6px 16px;
+    font-family: ui-monospace, Consolas, monospace; font-size: 15px; letter-spacing: 1px;
+    color: #4dd0e1; background: #0d2c46; border: 1px solid #1e4a6d; border-radius: 999px;
+  }
+  /* 面板本体:尺寸和真实 popup 完全一致,外面加一点阴影好和背景分开 */
+  body.popup {
+    max-height: none; overflow: visible;
+    border: 1px solid #1e4a6d; border-radius: 14px;
+    box-shadow: 0 26px 70px rgba(0, 0, 0, .55);
+  }
+</style>
+</head>
+<body class="popup">
+<div class="bar">
+  <span class="brand">🌊 BK漂流瓶</span>
+  <span class="who" id="who"></span>
+</div>
+<div class="receipt" id="receipt"></div>
+<div class="group">
+  <div id="box"><div class="wave">🎣🌊</div></div>
+  <div class="row" style="margin-top:10px">
+    <span id="goodWrap" class="half"></span>
+    <button class="primary" id="btnAgain">🎣 再捞一个</button>
+  </div>
+</div>
+<div class="group" id="pgroup">
+  <div class="sec fold" id="psec">
+    <span>🍾 待扔的瓶子 <span class="arrow">▾</span></span>
+    <span id="pcount"></span>
+  </div>
+  <div id="pending" class="plist cap"></div>
+  <div class="row">
+    <button class="ghost" id="btnThrow" style="flex:1">扔进海里</button>
+  </div>
+  <div class="pnote" id="pnote"></div>
+</div>
+<div class="foot">
+  <span>不读你的浏览记录 · <a href="https://github.com/bkingfilm/bk-bottle">源码</a></span>
+  <span>v0.1.0</span>
+</div>
+
+<script>
+// 左边那段文案得插到 html 里、排在 body 前面,所以用脚本塞
+var pitch = document.createElement("div");
+pitch.className = "pitch";
+pitch.innerHTML =
+  "<h1>捞一个陌生人<br><b>正在看的视频</b></h1>"
+  + "<p>算法喂给你的东西越来越像你已经点过的。<br>这是一条手工的出路。</p>"
+  + "<ul><li>点一下就捞，不用注册</li>"
+  + "<li>不读你的浏览记录</li>"
+  + "<li>不碰你的新标签页</li>"
+  + "<li>YouTube 和 B站 都能装进瓶子</li></ul>"
+  + '<span class="addr">b.bking.film</span>';
+document.documentElement.insertBefore(pitch, document.body);
+
+// 假数据:截图要的是版式,不去打真实接口
+var FAKE = {
+  id: "b:shot", by: "灯塔 657",
+  videos: [
+    { vid: "dQw4w9WgXcQ", title: "【鬼谷说】是什么「化石」让古生物学家集体破防？" },
+    { bvid: "BV1kz421b7Ec",
+      title: "河洛工作室 徐昌隆 金庸群侠传之后的30年 钱从哪来系列",
+      thumb: "https://i2.hdslb.com/bfs/archive/4c9f241a7932b149f79e611316abdc9c92489726.jpg" },
+    { vid: "SIh-2WepUHs", title: "海霸阿烽出海搞回100只特级黄金扇贝，加粉丝烧烤一次吃过瘾" },
+  ],
+};
+window.chrome = {
+  storage: { local: { get: function (k, cb) { cb({ device: "shot", lastGood: 0 }); },
+                      set: function (o, cb) { if (cb) cb(); } },
+             onChanged: { addListener: function () {} } },
+  action: { setBadgeText: function () {}, setBadgeBackgroundColor: function () {} },
+  tabs: { create: function () {} },
+  runtime: { onInstalled: { addListener: function () {} }, onStartup: { addListener: function () {} } },
+};
+window.fetch = function (url) {
+  if (url.indexOf("/api/fish") >= 0)
+    return Promise.resolve({ json: function () { return Promise.resolve(FAKE); } });
+  if (url.indexOf("/api/mine") >= 0)
+    return Promise.resolve({ json: function () {
+      return Promise.resolve({ good: 0, name: "北斗 796" }); } });
+  return Promise.resolve({ json: function () { return Promise.resolve({ ok: true }); } });
+};
+</script>
+<script src="../extension/lib.js"></script>
+<script src="../extension/panel.js"></script>
+</body>
+</html>
