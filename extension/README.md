@@ -29,6 +29,19 @@ host_permissions: b.bking.film, www.youtube.com, www.bilibili.com
 
 ## 装到 Chrome（开发版）
 
+改过 manifest 或增删文件之后，先跑一遍自查：
+
+```bash
+python check.py
+```
+
+Chrome 的加载报错一次只给一条，不自查就得反复点「重试」—— 这个脚本把踩过的坑
+都收进去了：下划线开头的文件名（系统保留前缀）、`default_locale` 声明了却没有
+`_locales/`、manifest 和 HTML 里引用了不存在的文件、内联事件处理器（MV3 的 CSP
+会拦）、以及有没有误申请 `history` / `tabs` / `<all_urls>` 这类破坏隐私承诺的权限。
+
+然后：
+
 1. 打开 `chrome://extensions/`
 2. 右上角开「开发者模式」
 3. 点「加载已解压的扩展程序」，选这个 `extension` 目录
