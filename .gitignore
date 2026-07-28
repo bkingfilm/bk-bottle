@@ -23,3 +23,5 @@ worker/wrangler.toml
 worker/DEPLOY.md
 archive-bili/
 growth/
+.claude/
+extension/dist/

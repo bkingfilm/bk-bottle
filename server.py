@@ -111,11 +111,17 @@ def too_concentrated(authors):
 
 
 def bottle_weight(b):
-    """质量加权:好评抬升、差评沉底,权重下限保留一点回流机会。"""
-    votes = b.get("votes", {})
-    good = sum(1 for v in votes.values() if v == "good")
-    bad = sum(1 for v in votes.values() if v == "bad")
-    return max(0.1, 1.0 + 0.5 * good - 0.2 * bad)
+    """质量加权:只按好评抬升,不按任何信号沉底。
+
+    「一般」按钮 2026-07-28 撤掉了,它实际是在被当翻页键点(33 次有意思对
+    70 次一般),当差评用就是给自己灌噪声。现在只有正信号,谁都不会被埋。
+    """
+    if isinstance(b.get("fans"), list):
+        good = len(b["fans"])
+    else:
+        votes = b.get("votes", {})
+        good = sum(1 for v in votes.values() if v == "good")
+    return 1.0 + 0.5 * good
 
 
 def allow_throw(ip):
@@ -281,7 +287,7 @@ class Handler(BaseHTTPRequestHandler):
             "id": "b%d%04d" % (int(time.time()), random.randint(0, 9999)),
             "device": device,
             "videos": videos,
-            "votes": {},
+            "fans": [],
             "fished": 0,
             "ts": int(time.time()),
         }
@@ -303,11 +309,21 @@ class Handler(BaseHTTPRequestHandler):
         if verdict not in ("good", "bad") or not bid or not device:
             self._json({"error": "参数不对"}, 400)
             return
+        # 旧页面缓存里还留着「一般」按钮,收下但不入库
+        if verdict == "bad":
+            self._json({"ok": True, "ignored": True})
+            return
         with LOCK:
             bottles = load_bottles()
             for b in bottles:
                 if b["id"] == bid:
-                    b.setdefault("votes", {})[device] = verdict
+                    old = b.get("votes", {})
+                    fans = b["fans"] if isinstance(b.get("fans"), list) else [
+                        k for k, v in old.items() if v == "good"]
+                    if device not in fans and len(fans) < 300:
+                        fans.append(device)
+                    b["fans"] = fans
+                    b.pop("votes", None)
                     save_bottles(bottles)
                     self._json({"ok": True})
                     return

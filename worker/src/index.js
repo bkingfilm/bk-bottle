@@ -10,7 +10,7 @@ import OGIMG from "./og.png";
 const MANIFEST = {
   name: "BK漂流瓶",
   short_name: "漂流瓶",
-  description: "匿名交换陌生人正在看的视频，看看信息茧房外面长什么样",
+  description: "和陌生人交换正在看的视频，看看信息茧房外面长什么样",
   start_url: "/",
   scope: "/",
   display: "standalone",
@@ -103,9 +103,12 @@ const FRESH_WINDOW = 86400;   // 新瓶保护期,秒
 
 function weight(meta, now) {
   const m = meta || {};
-  const g = m.g || 0, b = m.b || 0;
-  // 差评降权 0.2:「一般」多为翻页式随手点,降太狠会把小池子里的瓶子误杀沉底
-  let w = Math.max(0.1, 1.0 + 0.5 * g - 0.2 * b);
+  const g = m.g || 0;
+  // 只用正信号。原来的「一般」按钮 2026-07-28 撤了:它实际是被当翻页键在点
+  // (33 次有意思对 70 次一般),拿它当差评是在给自己灌噪声。现在想走的人直接
+  // 点「再捞一个」,不必先给陌生人打个差评才能离开。
+  // 加权只按好评升,不按任何信号降,所以没人会被埋掉,只有被更多人看见的先后。
+  let w = 1.0 + 0.5 * g;
   // 刚扔进来的头一天翻倍:扔瓶人贡献了就该被看见,否则一半的新瓶没人捞到过
   if (m.t && now - m.t < FRESH_WINDOW) w *= 2;
   // 种子瓶降权:真人瓶已经反超,站方内容该退居二线
@@ -155,6 +158,35 @@ async function fetchListMeta(lid) {
   }
 }
 
+// 手机 B站 App 分享出来的是 b23.tv/随机短码,不带 BV 号。浏览器跨域读不到重定向地址,
+// 只能在这里跟一次 302 把真实 BV 号挖出来(b23.tv 是纯短链服务,不在 -412 封锁范围)
+const B23_CODE_RE = /^[A-Za-z0-9]{4,16}$/;
+
+async function resolveB23(code) {
+  let target = "https://b23.tv/" + code;
+  for (let i = 0; i < 3; i++) {
+    let r;
+    try {
+      r = await fetch(target, {
+        redirect: "manual",
+        headers: { "User-Agent": "Mozilla/5.0" },
+        signal: AbortSignal.timeout(4000),
+      });
+    } catch (e) {
+      return null;
+    }
+    const loc = r.headers.get("Location") || "";
+    const m = loc.match(/bilibili\.com\/video\/(BV[A-Za-z0-9]{10}|av\d{1,12})/i);
+    if (m) return m[1];
+    if (r.status >= 300 && r.status < 400 && /^https:\/\/([a-z0-9-]+\.)*(bilibili\.com|b23\.tv)\//.test(loc)) {
+      target = loc;
+      continue;
+    }
+    return null;
+  }
+  return null;
+}
+
 // B站接口整段封禁 Cloudflare 机房 IP(-412),存在性验证改由扔瓶人浏览器 JSONP 完成,
 // 服务端只做 ID 格式、字段长度与封面域名白名单清洗。
 function sanitizeBilis(raw) {
@@ -180,7 +212,15 @@ function bottlePlatform(videos) {
 
 async function readBody(req, reqUrl) {
   const origin = req.headers.get("Origin");
-  if (origin && new URL(origin).host !== reqUrl.host) return { err: json({ error: "来源不允许" }, 403) };
+  // Chrome 插件的 Origin 是 chrome-extension://<插件id>,永远不等于本站 host,
+  // 所以要单独放行。这里放宽不会掉进 CSRF:本站不发 cookie 也不认 session,
+  // 身份(device)是请求体里自带的一串随机 id,拿别人的浏览器发请求也伪造不出
+  // 别人的身份。扔瓶另有每 IP 日限兜着。
+  // 插件上了商店拿到固定 id 之后,可以把这里收紧成只认那一个 id。
+  const fromExt = origin && origin.indexOf("chrome-extension://") === 0;
+  if (origin && !fromExt && new URL(origin).host !== reqUrl.host) {
+    return { err: json({ error: "来源不允许" }, 403) };
+  }
   const text = await req.text();
   if (text.length > MAX_BODY) return { err: json({ error: "请求太大" }, 413) };
   try {
@@ -199,7 +239,6 @@ async function handleThrow(req, reqUrl, env) {
   const rlKey = `rl:${ip}:${day}`;
   const used = parseInt((await env.BOTTLES.get(rlKey)) || "0", 10);
   if (used >= THROWS_PER_DAY) return json({ error: "今天扔得够多了，明天再来" }, 429);
-  await env.BOTTLES.put(rlKey, String(used + 1), { expirationTtl: 90000 });
 
   let vids = Array.isArray(body.data.videos) ? body.data.videos : [];
   vids = [...new Set(vids)].filter((v) => typeof v === "string" && VID_RE.test(v));
@@ -231,6 +270,10 @@ async function handleThrow(req, reqUrl, env) {
     return json({ error: "同一个频道的视频太多了，换着装点别的" }, 400);
   }
 
+  // 额度只在校验全过之后才扣:贴错链接、标题没拿到这类失败不烧当天次数
+  // (隔离区的瓶子也扣,影子删除对扔瓶人必须和正常成功一模一样)
+  await env.BOTTLES.put(rlKey, String(used + 1), { expirationTtl: 90000 });
+
   const p = bottlePlatform(valid);
 
   const stamp = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
@@ -238,7 +281,7 @@ async function handleThrow(req, reqUrl, env) {
   const quarantine = hitsSensitive(valid);
   const id = (quarantine ? "q:" : "b:") + stamp;
   const nowSec = Math.floor(Date.now() / 1000);
-  const bottle = { id, device, videos: valid, votes: {}, fished: 0, ts: nowSec };
+  const bottle = { id, device, videos: valid, fans: [], fished: 0, ts: nowSec };
   // t 存进 metadata,捞瓶加权时不必读正文就能判断新旧
   await env.BOTTLES.put(id, JSON.stringify(bottle), { metadata: { d: device, g: 0, b: 0, p, t: nowSec } });
   invalidateIndex();  // 新瓶必须马上能被别人捞到
@@ -246,11 +289,13 @@ async function handleThrow(req, reqUrl, env) {
 }
 
 async function handleFish(req, reqUrl, env) {
-  let device = "", seen = new Set(), follow = new Set(), src = "", pwa = false;
+  let device = "", seen = new Set(), follow = new Set(), src = "", pwa = false, demo = false;
   if (req.method === "POST") {
     const body = await readBody(req, reqUrl);
     if (body.err) return body.err;
     device = String(body.data.device || "").slice(0, 64);
+    // 首访自动演示捞:不算捞瓶人、不算被捞数,免得跳出的路人污染指标
+    demo = body.data.demo === true;
     // 装到桌面打开的标记,搭访客登记那次写入的车,不额外花写额度
     pwa = body.data.pwa === true;
     const arr = Array.isArray(body.data.seen) ? body.data.seen : [];
@@ -284,7 +329,7 @@ async function handleFish(req, reqUrl, env) {
 
   // 访客登记:只捞不扔的人原本完全隐形。天数存进 metadata,list 时零额外读取就能统计回访。
   // 同一设备同一天只写一次,写失败不能影响捞瓶本身
-  if (device) {
+  if (device && !demo) {
     try {
       const vkey = "v:" + device;
       const today = new Date().toISOString().slice(0, 10);
@@ -327,7 +372,7 @@ async function handleFish(req, reqUrl, env) {
       }
     });
   }
-  if (Math.random() < 1 / FISH_SAMPLE) {
+  if (!demo && Math.random() < 1 / FISH_SAMPLE) {
     bottle.fished = (bottle.fished || 0) + FISH_SAMPLE;
     // 被捞数同步进 metadata,回执接口才能不读正文就统计
     const md = Object.assign({}, picked.metadata, { f: bottle.fished });
@@ -350,13 +395,25 @@ async function handleFeedback(req, reqUrl, env) {
   if (!["good", "bad"].includes(verdict) || !bid.startsWith("b:") || !device) {
     return json({ error: "参数不对" }, 400);
   }
+  // 旧页面缓存里还留着「一般」按钮,收下但不入库:不计权重也不占 value 体积
+  if (verdict === "bad") return json({ ok: true, ignored: true });
   const got = await env.BOTTLES.getWithMetadata(bid);
   if (!got.value) return json({ error: "瓶子不存在" }, 404);
   const bottle = JSON.parse(got.value);
-  bottle.votes = bottle.votes || {};
-  bottle.votes[device] = verdict;
-  const g = Object.values(bottle.votes).filter((v) => v === "good").length;
-  const b = Object.values(bottle.votes).filter((v) => v === "bad").length;
+  // 只留好评者名单,用来防同一台设备重复投。名单封顶 300,再往上只涨计数不记名
+  // (加权只看数字),否则热门瓶的 votes 会跟着被捞次数一直长
+  const old = bottle.votes || {};
+  const fans = Array.isArray(bottle.fans) ? bottle.fans
+    : Object.keys(old).filter((k) => old[k] === "good");
+  const already = fans.indexOf(device) >= 0;
+  let g = (got.metadata && got.metadata.g) || fans.length;
+  if (!already) {
+    g++;
+    if (fans.length < 300) fans.push(device);
+  }
+  bottle.fans = fans;
+  delete bottle.votes;   // 一次性换掉旧结构,不再回写 bad
+  const b = (got.metadata && got.metadata.b) || 0;   // 历史数字留档,不再增长
   await env.BOTTLES.put(bid, JSON.stringify(bottle), {
     metadata: {
       d: (got.metadata && got.metadata.d) || bottle.device || "",
@@ -381,7 +438,9 @@ async function collectStats(env) {
     const b = JSON.parse(raw);
     const isSeed = (b.device || "").indexOf("seed") === 0;
     if (!isSeed) { real++; devices.add(b.device); }
-    const g = Object.values(b.votes || {}).filter((v) => v === "good").length;
+    // 新瓶只有 fans 数组,老瓶还是 votes 字典,两种都要认
+    const g = Array.isArray(b.fans) ? b.fans.length
+      : Object.values(b.votes || {}).filter((v) => v === "good").length;
     const bd = Object.values(b.votes || {}).filter((v) => v === "bad").length;
     fishedTotal += b.fished || 0; good += g; bad += bd;
     rows.push({
@@ -455,7 +514,7 @@ async function handleAdmin(url, env) {
     + "</b></div>"
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
     + "<div>🌟 有意思<b>" + s.good + "</b></div>"
-    + "<div>🫧 一般<b>" + s.bad + "</b></div></div>";
+    + "<div>🫧 一般（07-28 已撤）<b>" + s.bad + "</b></div></div>";
   const srcRows = Object.keys(s.bySrc).sort((a, b) => s.bySrc[b].n - s.bySrc[a].n);
   if (srcRows.length) {
     html += "<h2>来源渠道</h2><div class=overflow><table>"
@@ -506,12 +565,64 @@ export default {
     await env.BOTTLES.put("stat:" + day, JSON.stringify({
       total: s.total, real: s.real, devices: s.devices,
       fishedTotal: s.fishedTotal, good: s.good, bad: s.bad,
+      // 回访和装机是判断「有没有人愿意回来」的两个数,以前只在 admin 页当场算,
+      // 没进快照就看不出趋势
+      visitors: s.visitors, returning: s.returning, installed: s.installed,
     }));
   },
+  // Chrome 插件版的新标签页要直接调 /api/fish。MV3 里 host_permissions 本来
+  // 就允许扩展页跨域,这层 CORS 是保险:只回显 chrome-extension:// 的 Origin,
+  // 不对普通网站开放,所以不会变成一个谁都能白用的公开 API
   async fetch(req, env) {
+    const origin = req.headers.get("Origin") || "";
+    const fromExt = origin.indexOf("chrome-extension://") === 0;
+    if (fromExt && req.method === "OPTIONS") {
+      return new Response(null, { status: 204, headers: extCors(origin) });
+    }
+    const res = await route(req, env);
+    if (!fromExt) return res;
+    const out = new Response(res.body, res);   // headers 可能是只读的,重新包一层
+    const h = extCors(origin);
+    for (const k of Object.keys(h)) out.headers.set(k, h[k]);
+    return out;
+  },
+};
+
+function extCors(origin) {
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+}
+
+async function route(req, env) {
+  {
     const url = new URL(req.url);
     const p = url.pathname;
+    // 正式域名后 workers.dev 只留 API 和 PWA 资源,首页 301 集中搜索权重
+    const CANON = "https://b.bking.film";
+    if (req.method === "GET" && url.hostname.endsWith(".workers.dev") &&
+        (p === "/" || p === "/index.html")) {
+      return Response.redirect(CANON + "/" + url.search, 301);
+    }
     if (req.method === "GET") {
+      if (p === "/robots.txt") {
+        return new Response(
+          "User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n" +
+          "Sitemap: " + CANON + "/sitemap.xml\n",
+          { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+      }
+      if (p === "/sitemap.xml") {
+        return new Response(
+          '<?xml version="1.0" encoding="UTF-8"?>\n' +
+          '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+          "  <url><loc>" + CANON + "/</loc><changefreq>weekly</changefreq></url>\n" +
+          "</urlset>\n",
+          { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+      }
       if (p === "/" || p === "/index.html") {
         // 分享卡片的 og 标签要绝对地址,注入当前 origin,换域名不用改 HTML
         const html = HTML.split("__ORIGIN__").join(url.origin);
@@ -560,6 +671,12 @@ export default {
           })));
         return json({ items });
       }
+      if (p === "/api/b23") {
+        // b23.tv 短码 → BV/av 号。不碰 KV,纯转发一次重定向查询
+        const code = url.searchParams.get("c") || "";
+        if (!B23_CODE_RE.test(code)) return json({ id: null });
+        return json({ id: await resolveB23(code) });
+      }
       if (p === "/api/mine") {
         // 回执:让扔瓶人看到自己的瓶子被谁喜欢。全程走缓存索引,不额外消耗 KV
         const dev = url.searchParams.get("device") || "";
@@ -583,5 +700,5 @@ export default {
       if (p === "/api/fish") return handleFish(req, url, env);
     }
     return new Response("not found", { status: 404 });
-  },
-};
+  }
+}

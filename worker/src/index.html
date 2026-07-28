@@ -3,22 +3,40 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>BK漂流瓶 · 匿名交换陌生人正在看的视频</title>
+<title>BK漂流瓶 · 和陌生人交换正在看的视频</title>
 <meta name="description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
 <link rel="canonical" href="__ORIGIN__/">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="BK漂流瓶">
-<meta property="og:title" content="BK漂流瓶 · 匿名交换陌生人正在看的视频">
+<meta property="og:title" content="BK漂流瓶 · 和陌生人交换正在看的视频">
 <meta property="og:description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
 <meta property="og:url" content="__ORIGIN__/">
-<meta property="og:image" content="__ORIGIN__/og.png">
+<!-- 图后面挂版本号:各平台抓取器把 og 图缓存很久,改了图不换 URL 它们不会重抓。
+     每次重做 og.png 都把 v 加一,否则分享出去还是旧卡片 -->
+<meta property="og:image" content="__ORIGIN__/og.png?v=2">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:locale:alternate" content="zh_TW">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="BK漂流瓶 · 匿名交换陌生人正在看的视频">
+<meta name="twitter:title" content="BK漂流瓶 · 和陌生人交换正在看的视频">
 <meta name="twitter:description" content="把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。">
-<meta name="twitter:image" content="__ORIGIN__/og.png">
+<meta name="twitter:image" content="__ORIGIN__/og.png?v=2">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "BK漂流瓶",
+  "alternateName": "视频漂流瓶",
+  "url": "__ORIGIN__/",
+  "description": "把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。",
+  "applicationCategory": "EntertainmentApplication",
+  "operatingSystem": "Web",
+  "inLanguage": ["zh-CN", "zh-TW"],
+  "isAccessibleForFree": true,
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+}
+</script>
 <link rel="manifest" href="/manifest.webmanifest">
 <meta name="theme-color" content="#0d2c46">
 <link rel="apple-touch-icon" href="/icon-192.png">
@@ -65,6 +83,14 @@ header { text-align: center; margin-bottom: 34px; }
 header .logo { font-size: 52px; }
 header h1 { font-size: 26px; letter-spacing: 2px; margin-top: 8px; }
 header p { color: var(--dim); margin-top: 8px; font-size: 14px; line-height: 1.7; }
+/* 站点地址:好记是这个域名唯一的使命,摆在标题正下方,点一下就复制 */
+#siteAddr {
+  display: inline-block; margin-top: 10px; padding: 4px 14px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 15px; letter-spacing: 1px;
+  color: var(--glow); background: var(--mid); border: 1px solid var(--line);
+  border-radius: 999px; cursor: pointer; user-select: none;
+}
+#siteAddr:hover { border-color: var(--glow); }
 #stats { color: var(--glow); }
 
 .tabs { display: flex; gap: 12px; margin-bottom: 22px; }
@@ -147,7 +173,11 @@ input[type=text] { margin-top: 12px; }
   background: var(--card); border: 1px solid var(--line);
   border-radius: 10px; padding: 7px 9px;
 }
-.pv img { width: 84px; height: 48px; object-fit: cover; border-radius: 6px; background: #000; flex-shrink: 0; }
+.pv img {
+  width: 84px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0;
+  background: var(--mid) no-repeat center/20px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6a92' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3Cpath d='M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3C/svg%3E");
+}
 .pv .t { flex: 1; font-size: 13px; line-height: 1.5; color: var(--ink); }
 .pv .t small { display: block; color: var(--dim); font-size: 11px; margin-top: 2px; }
 .pv .x {
@@ -179,7 +209,15 @@ input[type=text] { margin-top: 12px; }
   transition: border-color .15s;
 }
 .vcard:hover { border-color: var(--glow); }
-.vcard img { width: 128px; height: 72px; object-fit: cover; border-radius: 8px; background: #000; flex-shrink: 0; }
+/* 底图画两道浪当占位:B站 封面走海外线路要一两秒,这段时间原来是一块纯黑,
+   看着像加载失败。图到了自然盖住它。
+   另外 img 上的 referrerpolicy="no-referrer" 千万别删 —— hdslb 有 Referer 防盗链,
+   带上本站域名一律 403,删了 B站 封面会集体消失 */
+.vcard img {
+  width: 128px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
+  background: var(--mid) no-repeat center/26px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6a92' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3Cpath d='M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3C/svg%3E");
+}
 .vcard .t { font-size: 14px; line-height: 1.6; }
 .pf-b {
   font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-right: 6px;
@@ -220,6 +258,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <div class="logo">🌊🍾</div>
     <h1>BK漂流瓶</h1>
     <p id="subTitle"></p>
+    <div id="siteAddr" onclick="copyAddr()" role="button" tabindex="0">b.bking.film</div>
   </header>
 
   <div id="cheer"></div>
@@ -277,6 +316,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
 
 <script>
 var device = localStorage.getItem("yb_device");
+var firstVisit = !device;   // 在生成 device 之前判断,否则永远是 false
 if (!device) {
   device = "d" + Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
   localStorage.setItem("yb_device", device);
@@ -308,14 +348,15 @@ var I18N = {
     h2Throw: "装瓶", h2Fish: "捞瓶",
     hintThrow: '在视频下面点「分享 → 复制链接」，回来贴到下面。<b style="color:var(--glow)">贴 1 到 5 条就够，一条也算一瓶</b>。YouTube 和 B站 都收，可以混着装。挑「你真的在看」的，别挑装点门面的。',
     hintFish: "随机捞一个别人扔的瓶子，看看信息茧房外面长什么样。",
+    demoNote: "🌊 刚好有一瓶漂到你脚边，先看看别人在看什么",
     phLinks: "把链接贴在这里，一行一个\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
     grabPc: "⚡ 电脑玩家进阶：一键抓取最近看的 10 条（手机用不了这招）",
     grabPc1: "按 <b>Ctrl+Shift+B</b> 调出书签栏（就是地址栏下面那一条）",
     grabPc2: "鼠标<b>按住</b>这个按钮别松手，拖到书签栏上再松开：",
     grabPc3a: "打开 ", grabPc3b: " 或 ", grabPc3c: "，点一下书签栏里的「🍾 装瓶」，这一页就自动填好了",
-    grabMb: "📱 安卓进阶：从 YouTube 直接分享过来，不用复制粘贴",
+    grabMb: "📱 安卓进阶：从 YouTube 或 B站 直接分享过来，不用复制粘贴",
     grabMb1: "用 Chrome 打开本页，菜单里点「添加到主屏幕」",
-    grabMb2: "以后在 YouTube 点分享，选择列表里的「漂流瓶」，链接自己就进来了",
+    grabMb2: "以后在 YouTube 点分享、或在 B站 分享面板点「更多」，选「漂流瓶」，链接自己就进来了",
     grabMb3: "可以连着分享好几条，攒够了一起扔（iPhone 用不了这招，还是复制粘贴）",
     counter: ["已识别 ", " 个有效视频"],
     btnThrow: "扔进海里", btnFish: "下网",
@@ -330,6 +371,8 @@ var I18N = {
     folAdd: "⭐ 记住这个瓶主", folDone: "✅ 已记住，他扔新瓶你会先捞到",
     sealing: "封瓶中，正在抓取标题…",
     biliFail: "这些 B站 链接找不到对应视频",
+    b23Fail: "b23.tv 短链没解析出来，打开它跳转后复制完整地址再贴",
+    addrCopied: "✅ 网址已复制",
     thrown: function (c) { return "🍾 装了 " + c + " 个视频的瓶子已经飘进海里"; },
     throwFail: "扔瓶失败，再试一次", netErr: "网络出错，再试一次",
     fishErr: "捞网断了，再试一次",
@@ -337,8 +380,9 @@ var I18N = {
     goThrow: "去扔一瓶",
     emptySea: "这片海还没有瓶子。<br>先扔一个，等下一个路过的人。",
     fromWho: "🧭 这瓶来自 ", seedNote: "（站里放的精选瓶）", followedNote: " · 你记住过的瓶主",
-    voteGood: "🌟 有意思", voteBad: "🫧 一般", shareBtn: "📋 分享这瓶",
-    voteDone: "收到，会影响这个瓶子以后被捞到的概率",
+    voteGood: "🌟 有意思", fishAgain: "🎣 再捞一个", shareBtn: "📋 分享这瓶",
+    voteDone: "🌟 已记下",
+    likedTitle: "你说过有意思的这几瓶：",
     shareOk: "✅ 已复制，发到哪都行",
     openIt: "打开看看是什么",
     autofill: function (n) { return "⚡ 已自动装入 " + n + " 个视频，过一眼没问题就扔"; },
@@ -363,14 +407,15 @@ var I18N = {
     h2Throw: "裝瓶", h2Fish: "撈瓶",
     hintThrow: '在影片下面點「分享 → 複製連結」，回來貼到下面。<b style="color:var(--glow)">貼 1 到 5 條就夠，一條也算一瓶</b>。YouTube 和 B站 都收，可以混著裝。挑「你真的在看」的，別挑裝點門面的。',
     hintFish: "隨機撈一個別人扔的瓶子，看看同溫層外面長什麼樣。",
+    demoNote: "🌊 剛好有一瓶漂到你腳邊，先看看別人在看什麼",
     phLinks: "把連結貼在這裡，一行一個\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
     grabPc: "⚡ 電腦玩家進階：一鍵抓取最近看的 10 條（手機用不了這招）",
     grabPc1: "按 <b>Ctrl+Shift+B</b> 叫出書籤列（就是網址列下面那一條）",
     grabPc2: "滑鼠<b>按住</b>這個按鈕別放，拖到書籤列上再放開：",
     grabPc3a: "打開 ", grabPc3b: " 或 ", grabPc3c: "，點一下書籤列裡的「🍾 裝瓶」，這一頁就自動填好了",
-    grabMb: "📱 安卓進階：從 YouTube 直接分享過來，不用複製貼上",
+    grabMb: "📱 安卓進階：從 YouTube 或 B站 直接分享過來，不用複製貼上",
     grabMb1: "用 Chrome 打開本頁，選單裡點「加到主畫面」",
-    grabMb2: "以後在 YouTube 點分享，清單裡選「漂流瓶」，連結自己就進來了",
+    grabMb2: "以後在 YouTube 點分享、或在 B站 分享面板點「更多」，選「漂流瓶」，連結自己就進來了",
     grabMb3: "可以連著分享好幾條，攢夠了一起扔（iPhone 用不了這招，還是複製貼上）",
     counter: ["已辨識 ", " 個有效影片"],
     btnThrow: "扔進海裡", btnFish: "下網",
@@ -385,6 +430,8 @@ var I18N = {
     folAdd: "⭐ 記住這個瓶主", folDone: "✅ 已記住，他扔新瓶你會先撈到",
     sealing: "封瓶中，正在抓取標題…",
     biliFail: "這些 B站 連結找不到對應影片",
+    b23Fail: "b23.tv 短連結沒解析出來，打開它跳轉後複製完整地址再貼",
+    addrCopied: "✅ 網址已複製",
     thrown: function (c) { return "🍾 裝了 " + c + " 個影片的瓶子已經飄進海裡"; },
     throwFail: "扔瓶失敗，再試一次", netErr: "網路出錯，再試一次",
     fishErr: "撈網斷了，再試一次",
@@ -392,8 +439,9 @@ var I18N = {
     goThrow: "去扔一瓶",
     emptySea: "這片海還沒有瓶子。<br>先扔一個，等下一個路過的人。",
     fromWho: "🧭 這瓶來自 ", seedNote: "（站裡放的精選瓶）", followedNote: " · 你記住過的瓶主",
-    voteGood: "🌟 有意思", voteBad: "🫧 普通", shareBtn: "📋 分享這瓶",
-    voteDone: "收到，會影響這個瓶子以後被撈到的機率",
+    voteGood: "🌟 有意思", fishAgain: "🎣 再撈一個", shareBtn: "📋 分享這瓶",
+    voteDone: "🌟 已記下",
+    likedTitle: "你說過有意思的這幾瓶：",
     shareOk: "✅ 已複製，發到哪都行",
     openIt: "打開看看是什麼",
     autofill: function (n) { return "⚡ 已自動裝入 " + n + " 個影片，過一眼沒問題就扔"; },
@@ -546,8 +594,40 @@ var LIST_RE = /[?&]list=([A-Za-z0-9_-]{12,50})/;
 var BILI_PATTERNS = [
   /bilibili\.com\/video\/(BV[A-Za-z0-9]{10})/,
   /bilibili\.com\/video\/(av\d{1,12})/i,
-  /b23\.tv\/(BV[A-Za-z0-9]{10})/
+  /b23\.tv\/(BV[A-Za-z0-9]{10})/,
+  /b23\.tv\/(av\d{1,12})\b/i
 ];
+
+// 手机 B站 App 分享出来的是 b23.tv/随机短码,前端跨域读不到重定向,
+// 丢给 Worker 解析成 BV 号后就地替换输入框里的短链,下游全按标准链接走
+var B23_SHORT_RE = /b23\.tv\/([A-Za-z0-9]{4,16})/g;
+var b23Seen = {};   // code -> 1,成功失败都只解析一次
+
+function isPlainBiliId(code) {
+  return /^BV[A-Za-z0-9]{10}$/.test(code) || /^av\d{1,12}$/i.test(code);
+}
+
+function resolveB23Links() {
+  var codes = [], m;
+  B23_SHORT_RE.lastIndex = 0;
+  while ((m = B23_SHORT_RE.exec($("links").value))) {
+    if (!isPlainBiliId(m[1]) && !b23Seen[m[1]]) { b23Seen[m[1]] = 1; codes.push(m[1]); }
+  }
+  codes.forEach(function (c) {
+    fetch("/api/b23?c=" + c).then(function (r) { return r.json(); }).then(function (d) {
+      var ta = $("links");
+      var re = new RegExp("(https?:\\/\\/)?b23\\.tv\\/" + c + "[^\\s]*");
+      if (d.id) {
+        ta.value = ta.value.replace(re, "https://www.bilibili.com/video/" + d.id);
+        ta.dispatchEvent(new Event("input"));
+      } else if (re.test(ta.value)) {
+        var msg = $("msgThrow");
+        msg.className = "msg err";
+        msg.textContent = T.b23Fail;
+      }
+    }).catch(function () {});
+  });
+}
 function parseIds(text) {
   var vids = [], lists = [], bilis = [], seen = {};
   text.split(/\s+/).forEach(function (tok) {
@@ -633,7 +713,7 @@ function renderPreview() {
   box.className = "on";
   box.innerHTML = items.map(function (it, i) {
     var c = pvCache[pvKey(it)] || {};
-    var img = it.vid ? "https://i.ytimg.com/vi/" + it.vid + "/default.jpg" : (c.thumb || "");
+    var img = it.vid ? "https://i.ytimg.com/vi/" + it.vid + "/default.jpg" : thumbSmall(c.thumb, 240);
     var badge = it.bvid ? '<span class="pf-b">B站</span>' : it.list ? "📃 " : "";
     var title = c.title || (it.bvid || it.list || it.vid);
     return '<div class="pv' + (c.title ? "" : " load") + '">'
@@ -696,6 +776,7 @@ $("links").addEventListener("input", function () {
     over.style.display = "none";
   }
   renderPreview();
+  resolveB23Links();
   clearTimeout(pvTimer);
   pvTimer = setTimeout(fetchPreviewMeta, 600);
 });
@@ -817,6 +898,9 @@ function maybeInstall() {
 }
 
 var lastBottle = null;
+var lastBy = "";
+var liked = [];
+try { liked = JSON.parse(localStorage.getItem("yb_liked") || "[]"); } catch (e) {}
 function shareBottle() {
   if (!lastBottle) return;
   var lines = lastBottle.map(function (v) { return "· " + (v.title || "").slice(0, 42); });
@@ -824,6 +908,30 @@ function shareBottle() {
   function done() {
     var b = document.getElementById("shareBtn");
     if (b) b.textContent = T.shareOk;
+  }
+  function fallback() {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+// 标题下那颗域名药丸:点一下把网址复制走,好记的地址才传得出去
+function copyAddr() {
+  var el = $("siteAddr");
+  var text = "https://b.bking.film";
+  function done() {
+    el.textContent = T.addrCopied;
+    setTimeout(function () { el.textContent = "b.bking.film"; }, 1600);
   }
   function fallback() {
     var ta = document.createElement("textarea");
@@ -864,8 +972,61 @@ function vote(bottleId, verdict) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ bottle: bottleId, verdict: verdict, device: device })
   }).catch(function () {});
-  var fb = document.getElementById("fb");
-  if (fb) fb.innerHTML = '<span class="done">' + T.voteDone + '</span>';
+  // 只换掉「有意思」自己,「再捞一个」和「分享」得留着,否则点完评价就没有出口了
+  var btn = $("goodBtn");
+  if (btn) btn.outerHTML = '<span class="done">' + T.voteDone + "</span>";
+  rememberLiked();
+}
+
+// 捞空整片海之后总得有地方可去,把他自己说过有意思的瓶子留在本地当收藏夹。
+// 只存前端,不占 KV,服务端也就不需要一张「谁喜欢过什么」的反查表
+function rememberLiked() {
+  if (!lastBottle) return;
+  liked = liked.filter(function (x) { return x.by !== lastBy || x.n !== lastBottle.length; });
+  liked.push({ by: lastBy || "", v: lastBottle, n: lastBottle.length });
+  if (liked.length > 20) liked = liked.slice(-20);
+  try { localStorage.setItem("yb_liked", JSON.stringify(liked)); } catch (e) {}
+}
+
+// 海捞空了不能是死胡同。倒序显示最近说过有意思的几瓶,让他还有东西可看
+function likedHtml() {
+  if (!liked.length) return "";
+  var html = '<div class="by" style="margin-top:22px">' + T.likedTitle + "</div>"
+    + '<div class="vlist">';
+  liked.slice().reverse().slice(0, 5).forEach(function (x) {
+    (x.v || []).forEach(function (v) { html += videoCardHtml(v); });
+  });
+  return html + "</div>";
+}
+
+// B站 的图 CDN 认 @ 后缀缩放。卡片最宽 148px,原图动辄 1500px 宽,一瓶五张就是
+// 好几兆,手机流量上尤其疼。默认 480w 够 2x 屏用,装瓶预览那排小图给 240w
+function thumbSmall(t, w) {
+  if (!t) return "";
+  w = w || 480;
+  return /\.(hdslb|biliimg)\.com\//.test(t)
+    ? t.split("@")[0] + "@" + w + "w_" + Math.round(w * 9 / 16) + "h"
+    : t;
+}
+
+function videoCardHtml(v) {
+  var url, img, badge = "";
+  if (v.bvid) {
+    url = "https://www.bilibili.com/video/" + v.bvid;
+    img = thumbSmall(v.thumb);
+    badge = '<span class="pf-b">B站</span>';
+  } else if (v.list) {
+    url = "https://www.youtube.com/playlist?list=" + v.list;
+    img = v.thumb || "";
+    badge = "📃 ";
+  } else {
+    url = "https://www.youtube.com/watch?v=" + v.vid;
+    img = "https://i.ytimg.com/vi/" + v.vid + "/mqdefault.jpg";
+  }
+  return '<a class="vcard" href="' + url + '" target="_blank" rel="noopener">'
+    + '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
+    + '<div><div class="t">' + badge + esc(v.title || T.openIt) + "</div>"
+    + '<div class="u">' + url + "</div></div></a>";
 }
 
 function esc(s) {
@@ -906,12 +1067,23 @@ function bindBookmarklet() {
   var shared = [q.get("share"), q.get("text"), q.get("title")].filter(Boolean).join(" ");
   if (!shared) return;
   var ids = parseIds(shared);
-  if (!ids.vids.length && !ids.lists.length) return;
+  // B站 App 分享出来的是 b23.tv/随机短码,parseIds 认不出,原样带进输入框由解析器接手
+  var shorts = [], sm, shortSeen = {};
+  B23_SHORT_RE.lastIndex = 0;
+  while ((sm = B23_SHORT_RE.exec(shared))) {
+    if (!isPlainBiliId(sm[1]) && !shortSeen[sm[1]]) {
+      shortSeen[sm[1]] = 1;
+      shorts.push("https://b23.tv/" + sm[1]);
+    }
+  }
+  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length && !shorts.length) return;
   history.replaceState(null, "", location.pathname);
   switchTab("throw");
   var ta = $("links");
   var lines = ids.vids.map(function (v) { return "https://www.youtube.com/watch?v=" + v; })
-    .concat(ids.lists.map(function (x) { return "https://www.youtube.com/playlist?list=" + x; }));
+    .concat(ids.lists.map(function (x) { return "https://www.youtube.com/playlist?list=" + x; }))
+    .concat(ids.bilis.map(function (b) { return "https://www.bilibili.com/video/" + b; }))
+    .concat(shorts);
   ta.value = (ta.value ? ta.value.replace(/\s*$/, "\n") : "") + lines.join("\n");
   ta.dispatchEvent(new Event("input"));
   var msg = $("msgThrow");
@@ -945,21 +1117,24 @@ function bindBookmarklet() {
   msg.textContent = T.autofill(lines.length);
 })();
 
-$("btnFish").onclick = function () {
+function doFish(isDemo) {
   var box = $("fishResult"), msg = $("msgFish");
   msg.textContent = "";
   box.innerHTML = '<div class="wave">🎣🌊</div>';
   fetch("/api/fish", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ device: device, seen: seen, follow: follow, src: mySrc, pwa: isStandalone })
+    body: JSON.stringify({ device: device, seen: seen, follow: follow, src: mySrc,
+      pwa: isStandalone, demo: isDemo === true })
   })
     .then(function (r) { return r.json(); })
     .then(function (d) {
       if (d.empty) {
+        if (isDemo) { box.innerHTML = ""; return; }   // 演示捞不到就装没这回事
         if (d.exhausted) {
           box.innerHTML = '<div id="fishEmpty">' + T.exhausted + '</div>'
-            + '<button class="big" onclick="switchTab(\'throw\')">' + T.goThrow + '</button>';
+            + '<button class="big" onclick="switchTab(\'throw\')">' + T.goThrow + '</button>'
+            + likedHtml();
         } else {
           box.innerHTML = '<div id="fishEmpty">' + T.emptySea + '</div>';
         }
@@ -971,6 +1146,7 @@ $("btnFish").onclick = function () {
         localStorage.setItem("yb_seen", JSON.stringify(seen));
       }
       var html = "";
+      if (isDemo) html += '<div class="by">' + T.demoNote + "</div>";
       if (d.by) {
         var already = follow.indexOf(d.by) >= 0;
         html += '<div class="by">' + T.fromWho + "<b>" + esc(d.by) + "</b>"
@@ -982,43 +1158,31 @@ $("btnFish").onclick = function () {
           + "</div>";
       }
       html += '<div class="vlist">';
-      d.videos.forEach(function (v) {
-        var url, img, badge = "";
-        if (v.bvid) {
-          url = "https://www.bilibili.com/video/" + v.bvid;
-          img = v.thumb || "";
-          badge = '<span class="pf-b">B站</span>';
-        } else if (v.list) {
-          url = "https://www.youtube.com/playlist?list=" + v.list;
-          img = v.thumb || "";
-          badge = "📃 ";
-        } else {
-          url = "https://www.youtube.com/watch?v=" + v.vid;
-          img = "https://i.ytimg.com/vi/" + v.vid + "/mqdefault.jpg";
-        }
-        html += '<a class="vcard" href="' + url + '" target="_blank" rel="noopener">'
-          + '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
-          + '<div><div class="t">' + badge + esc(v.title || T.openIt) + "</div>"
-          + '<div class="u">' + url + "</div></div></a>";
-      });
+      d.videos.forEach(function (v) { html += videoCardHtml(v); });
       html += "</div>"
         + '<div class="wm">🌊 BK漂流瓶 · ' + location.host + "</div>"
         + '<div class="fb" id="fb">'
-        + '<button onclick="vote(\'' + esc(d.id) + '\',\'good\')">' + T.voteGood + "</button>"
-        + '<button onclick="vote(\'' + esc(d.id) + '\',\'bad\')">' + T.voteBad + "</button>"
+        + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'
+        + T.voteGood + "</button>"
+        + '<button onclick="doFish(false)">' + T.fishAgain + "</button>"
         + '<button id="shareBtn" onclick="shareBottle()">' + T.shareBtn + "</button>"
         + "</div>";
       lastBottle = d.videos;
+      lastBy = d.by || "";
       box.innerHTML = html;
-      maybeNudge();
-      maybeInstall();
+      if (!isDemo) {   // 演示不算捞瓶次数,也不触发扔瓶提示和装桌面提示
+        maybeNudge();
+        maybeInstall();
+      }
     })
     .catch(function () {
       box.innerHTML = "";
+      if (isDemo) return;
       msg.className = "msg err";
       msg.textContent = T.fishErr;
     });
-};
+}
+$("btnFish").onclick = function () { doFish(false); };
 
 applyLang();  // 所有函数就位后再渲染界面文案
 
@@ -1030,6 +1194,16 @@ if (location.hash === "#autofish") {
   switchTab("fish");
   setTimeout(function () { $("btnFish").click(); }, 400);
 }
+
+// 首访自动捞一网演示:新人 3 秒看懂这是什么。只演一次,不计任何统计;
+// 带分享/书签参数进来的人有明确目的,不打断
+(function demoFish() {
+  if (!firstVisit || localStorage.getItem("yb_demo_done")) return;
+  if (location.hash || /[?&](share|text|title)=/.test(location.search)) return;
+  localStorage.setItem("yb_demo_done", "1");
+  switchTab("fish");
+  doFish(true);
+})();
 </script>
 </body>
 </html>

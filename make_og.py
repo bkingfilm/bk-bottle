@@ -32,12 +32,12 @@ def center(text, font, y, fill, color_emoji=False):
 
 center("🌊🍾", emoji, 88, None, True)
 center("BK漂流瓶", bold, 268, "#e8f2fa")
-center("匿名交换陌生人正在看的视频", reg, 382, "#8fb3cc")
+center("和陌生人交换正在看的视频", reg, 382, "#8fb3cc")
 center("看看信息茧房外面长什么样", reg, 436, "#8fb3cc")
 
 # 细分隔线 + 站点标识
 d.line([(430, 516), (770, 516)], fill="#1e4a6d", width=2)
-center("yt-bottle.bkingfilm.workers.dev", small, 546, "#4dd0e1")
+center("b.bking.film", small, 546, "#4dd0e1")
 
 img.save("G:/claude code/yt-bottle/worker/src/og.png", optimize=True)
 print("saved", img.size)
