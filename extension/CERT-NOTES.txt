@@ -1,0 +1,22 @@
+BK Bottle lets people anonymously exchange videos they are actually watching. A user puts their own video links into a "bottle" and throws it into the sea; in return they get a random bottle thrown by a stranger. No account, no sign-in, no messaging, no ads, nothing hidden or locked.
+
+HOW TO TEST (no test account needed). The UI is Chinese, so:
+
+1. Click the toolbar icon. The panel opens and automatically fetches one random bottle, showing 2-5 YouTube/Bilibili video cards. Clicking a card opens that video.
+2. "再捞一个" = fish another bottle. "有意思" = upvote this bottle.
+3. Open any YouTube watch page or Bilibili video page. One button "装进瓶子" (= add to bottle) appears next to the like/share row. Click it; the queue count in the panel goes up.
+4. In the panel, "扔进海里" (= throw into the sea) submits the queued videos as a new bottle. When the queue is empty that button reads "去网页扔一瓶" and just opens our web page.
+
+PERMISSIONS
+
+storage: keeps the user's anonymous local id and the not-yet-thrown queue on their own machine; nothing is uploaded.
+
+https://b.bking.film/*: the extension's own backend (fetch a bottle, throw a bottle, show how many people liked your bottles).
+
+https://www.youtube.com/* and https://www.bilibili.com/video/*: used only to inject that single "add to bottle" button, and only at the moment the user clicks it, to read the current video's public metadata (video id, title, thumbnail URL, channel or uploader name). Bilibili thumbnails must be read client-side because Bilibili blocks datacenter IP ranges, so our server cannot fetch them.
+
+No browsing history is accessed; the history permission is not requested. The extension does not override the new tab page, homepage or search engine. No remote code: all JS ships inside the package, no eval, no external scripts.
+
+Source (MIT): https://github.com/bkingfilm/bk-bottle
+Privacy policy: https://b.bking.film/privacy
+Web version: https://b.bking.film

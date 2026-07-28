@@ -1,5 +1,29 @@
 # 上架材料（Edge / Chrome 商店）
 
+## 当前状态
+
+| 商店 | 状态 | 时间 |
+|---|---|---|
+| **Edge Add-ons** | **In review**（已提交，微软说 7 个工作日内回） | 2026-07-29 提交 |
+| Chrome Web Store | 未提交（后台禁止脚本化，要手填，见 STORE-CHROME.md） | — |
+
+Edge 侧已备案的身份信息（以后收紧 CORS、查商店页都要用）：
+
+```
+Store ID    0RDCKB732DDT
+CRX ID      koekmdgnpbleaelfbkiinnhjdmbpmigg
+Product ID  916b02f4-2a76-4b09-9740-2ced2a5dcc66
+Publisher   导演BK（Individual 账号，Verification Status: Authorized）
+提交版本    0.1.1
+审核备注    extension/CERT-NOTES.txt（1932 字符，限 2000）
+```
+
+**别急着用 CRX ID 收紧 worker 的 CORS。** 本地开发版加载的是另一个 id
+（kojnijdnomgpoebfnochpafnoncheilf），Chrome 商店发布后还会有第三个。等三个
+都齐了再一次性改成白名单，现在收紧会让自己装的开发版立刻捞不到瓶。
+
+---
+
 照这份直接复制粘贴。**Edge 免费**，Chrome 要一次性 $5 开发者注册费，所以先上 Edge。
 
 ---
