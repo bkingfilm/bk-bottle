@@ -25,9 +25,11 @@
 
 ## Chrome 插件
 
-`extension/` 里是插件版：新标签页就是一次捞瓶，YouTube 和 B站 的播放页多一个「装进瓶子」。
+`extension/` 里是插件版：点工具栏那个瓶子就是一次捞瓶，YouTube 和 B站 的播放页多一个「装进瓶子」。
 
-权限只要 `storage` 加三个域名，没有 `history`、没有 `tabs`、没有 `<all_urls>` —— 上面那条「不读你的浏览记录」在插件里也算数，虽然插件确实有这个 API。装载和上架说明见 [extension/README.md](extension/README.md)。
+权限只要 `storage` 加三个域名，没有 `history`、没有 `tabs`、没有 `<all_urls>` —— 上面那条「不读你的浏览记录」在插件里也算数，虽然插件确实有这个 API。
+
+**也不接管你的新标签页。** 2026-07-28 加过一次，理由是回访，当天被否掉：改别人的新标签页等于把人家主页换了，而且跟这产品的立意直接冲突。这条是硬红线，`extension/check.py` 里有检查守着。装载和上架说明见 [extension/README.md](extension/README.md)。
 
 ## 怎么实现的
 
