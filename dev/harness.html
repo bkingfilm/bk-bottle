@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <title>harness · 不打包</title>
-<link rel="stylesheet" href="base.css">
-<link rel="stylesheet" href="popup.css">
+<link rel="stylesheet" href="../extension/base.css">
+<link rel="stylesheet" href="../extension/popup.css">
 <style>
   /* 开发壳子:把 popup 摆在深色底上,好看清它真实的边界。
      红线画在 600px 处 —— Chrome 的 popup 高度上限,内容压过这条线就会出滚动条 */
@@ -19,7 +19,8 @@
 </style>
 </head>
 <!-- 把 chrome.* 和 fetch 换成假的,好在普通浏览器里验证面板的渲染和交互。
-     不进发布包(pack.py 排除下划线开头的文件)。
+     放在 extension/ 外面:Chrome 不许扩展目录里出现下划线开头的文件,
+     而且发布目录就该只有真正要发的东西。
      要看新标签页版式,把 body 的 class 换成 newtab 并改引 newtab.css。 -->
 <body class="popup">
 <div class="bar">
@@ -108,7 +109,7 @@ window.fetch = function (url) {
   return Promise.resolve({ json: function () { return Promise.resolve({ ok: true }); } });
 };
 </script>
-<script src="lib.js"></script>
-<script src="panel.js"></script>
+<script src="../extension/lib.js"></script>
+<script src="../extension/panel.js"></script>
 </body>
 </html>

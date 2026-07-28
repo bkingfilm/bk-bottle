@@ -3,7 +3,9 @@
 用法:python pack.py
 输出:dist/bk-bottle-<版本号>.zip
 
-下划线开头的文件不进包(_harness.html 是开发用的壳子),pack.py 自己也不进。
+这个目录里只放真正要发布的文件 —— Chrome 加载未打包扩展时会把整个目录读进去,
+多余的东西不但没用,名字以下划线开头还会直接让加载失败(系统保留前缀)。
+开发用的那个壳子因此放在仓库的 dev/ 下,不在这里。
 """
 import json
 import os

@@ -51,7 +51,9 @@ host_permissions: b.bking.film, www.youtube.com, www.bilibili.com
 python pack.py     # 输出 dist/bk-bottle-<版本>.zip
 ```
 
-下划线开头的文件不进包（`_harness.html` 是开发用的壳子，把 `chrome.*` 和 `fetch` 换成假的，好在普通浏览器里改界面，不用每次重载插件）。
+**这个目录里只放真正要发布的文件。** Chrome 加载未打包扩展时会把整个目录读进去，多余的东西不但没用，名字以下划线开头还会直接让加载失败（`_` 是系统保留前缀，报 `Filenames starting with "_" are reserved`）。
+
+开发用的壳子因此放在仓库的 [dev/harness.html](../dev/harness.html)：它把 `chrome.*` 和 `fetch` 换成假的，双击就能在普通浏览器里改界面，不用每次重载插件。改完记得回到真 Chrome 里验一遍。
 
 **Chrome Web Store**：一次性 $5 开发者注册费，审核 1 到 3 天。注意国内打不开商店。
 
