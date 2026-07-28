@@ -14,7 +14,13 @@
       var t = document.querySelector("h1.ytd-watch-metadata yt-formatted-string")
         || document.querySelector("h1.title yt-formatted-string")
         || document.querySelector("h1");
-      return { vid: m[1], title: (t ? t.textContent : document.title).trim().slice(0, 120) };
+      // 频道名要一起带走:服务端拿它判断一瓶里是不是同一个号占了一半以上
+      var ch = document.querySelector("ytd-channel-name a, #owner #channel-name a");
+      return {
+        vid: m[1],
+        title: (t ? t.textContent : document.title).trim().slice(0, 120),
+        author: ch ? ch.textContent.trim().slice(0, 50) : "",
+      };
     }
     if (host.indexOf("bilibili.com") >= 0) {
       var b = location.pathname.match(/\/video\/(BV[A-Za-z0-9]{10})/);
@@ -23,11 +29,13 @@
       // 在页面上直接读 DOM 反而是最稳的一条路,顺手把封面也带走
       var h = document.querySelector("h1.video-title, .video-title, h1");
       var cover = document.querySelector('meta[itemprop="image"], meta[property="og:image"]');
+      var up = document.querySelector(".up-name, a.up-name, .username");
       return {
         bvid: b[1],
         title: (h ? (h.getAttribute("title") || h.textContent) : document.title)
           .trim().replace(/_哔哩哔哩.*$/, "").slice(0, 120),
         thumb: cover ? cover.getAttribute("content") || "" : "",
+        author: up ? up.textContent.trim().slice(0, 50) : "",
       };
     }
     return null;

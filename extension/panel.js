@@ -172,18 +172,54 @@ function drawPending() {
   });
 }
 
-// 扔瓶交给网页:插件只把清单塞进 hash,由 b.bking.film 装填,你过一眼再提交。
-// 这样瓶主永远是网页那个身份,回执才不会断(插件从不写后端)
+// 直接扔。身份用的是 bridge.js 从网页同步来的同一个 device,所以瓶主不会分裂,
+// 回执也对得上。校验(视频是否真实存在、频道集中度、每 IP 日限、敏感词)全在服务端,
+// 插件只负责把清单发上去、把结果显示出来。
+//
+// 清单空着时按钮变成「去网页扔一瓶」,那条路留给手动贴链接的场景。
 function throwPending() {
-  // 清单空着也能点:直接把网页的扔瓶页打开,手动贴链接照样能扔
   if (!state.pending.length) { openSite("/#throw"); return; }
-  var url = pendingHash(state.pending);
-  save({ pending: [] }).then(function () {
-    state.pending = [];
-    drawPending();
-    chrome.tabs.create({ url: url });
-    if (isPopup()) window.close();
+
+  var payload = { device: state.device, videos: [], lists: [], bilis: [] };
+  state.pending.forEach(function (v) {
+    if (v.bvid) {
+      // B站 元数据只能由浏览器带上来:服务端那边机房 IP 调 B站 接口被 -412 全封
+      payload.bilis.push({
+        id: v.bvid, title: v.title || "", author: v.author || "", thumb: v.thumb || "",
+      });
+    } else if (v.list) payload.lists.push(v.list);
+    else if (v.vid) payload.videos.push(v.vid);
   });
+
+  btnThrow.disabled = true;
+  btnThrow.textContent = "正在扔…";
+  fetch(API + "/api/throw", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  })
+    .then(function (r) { return r.json(); })
+    .then(function (d) {
+      if (!d.ok) throw new Error(d.error || "扔失败了");
+      state.pending = [];
+      save({ pending: [] });
+      drawPending();
+      note("🍾 装了 " + d.count + " 个视频的瓶子已经飘进海里", "ok");
+    })
+    .catch(function (e) {
+      btnThrow.disabled = false;
+      btnThrow.textContent = "扔进海里";
+      note(String(e.message || e), "err");
+    });
+}
+
+// 一行提示,压在待扔那一组下面。成功和失败都用它,免得再开弹窗
+function note(text, kind) {
+  var el = document.getElementById("pnote");
+  if (!el) return;
+  el.textContent = text;
+  el.className = "pnote " + kind;
+  if (kind === "ok") setTimeout(function () { el.className = "pnote"; }, 6000);
 }
 
 function openSite(path) {

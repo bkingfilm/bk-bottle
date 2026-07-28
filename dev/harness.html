@@ -5,6 +5,7 @@
 <title>harness · 不打包</title>
 <link rel="stylesheet" href="../extension/base.css">
 <link rel="stylesheet" href="../extension/popup.css">
+<!-- 想看新标签页版式:把 popup.css 换成 newtab.css,body 的 class 换成 newtab -->
 <style>
   /* 开发壳子:把 popup 摆在深色底上,好看清它真实的边界。
      红线画在 600px 处 —— Chrome 的 popup 高度上限,内容压过这条线就会出滚动条 */
@@ -47,10 +48,11 @@
   <div class="row">
     <button class="ghost" id="btnThrow" style="flex:1">扔进海里</button>
   </div>
+  <div class="pnote" id="pnote"></div>
 </div>
 
 <div class="foot">
-  <a href="https://b.bking.film/" target="_blank" rel="noopener">b.bking.film</a>
+  <span>不读你的浏览记录 · <a href="https://github.com/bkingfilm/bk-bottle" target="_blank" rel="noopener">源码</a></span>
   <span>v0.1.0</span>
 </div>
 
@@ -105,6 +107,10 @@ window.fetch = function (url) {
     return Promise.resolve({ json: function () {
       return Promise.resolve({ bottles: 2, good: 5, fished: 9, name: "灯塔 411" });
     } });
+  }
+  if (url.indexOf("/api/throw") >= 0) {
+    // 想验证失败分支，把下面这行换成 { error: "今天扔得够多了，明天再来" }
+    return Promise.resolve({ json: function () { return Promise.resolve({ ok: true, count: 2 }); } });
   }
   return Promise.resolve({ json: function () { return Promise.resolve({ ok: true }); } });
 };

@@ -245,6 +245,31 @@ button {
 #pgroup.lean .sec { margin-bottom: 9px; }
 #pgroup.lean .arrow { display: none; }
 
+/* 扔瓶结果:成功过几秒自己消失,失败留着让人看清原因(服务端的话术直接照搬,
+   像「今天扔得够多了，明天再来」「同一个频道的视频太多了」) */
+.pnote {
+  display: none;
+  margin-top: 9px;
+  padding: 8px 11px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  line-height: 1.6;
+}
+
+.pnote.ok {
+  display: block;
+  color: var(--glow);
+  background: rgba(77, 208, 225, .1);
+  border: 1px solid rgba(77, 208, 225, .4);
+}
+
+.pnote.err {
+  display: block;
+  color: #ff9a8a;
+  background: rgba(255, 154, 138, .1);
+  border: 1px solid rgba(255, 154, 138, .45);
+}
+
 /* 瓶子里视频多的时候让列表自己滚,别把整个面板顶长 */
 .vlist.cap { max-height: 268px; overflow-y: auto; padding-right: 2px; }
 .plist.cap { max-height: 140px; overflow-y: auto; }
