@@ -27,6 +27,89 @@ const MANIFEST = {
   },
 };
 
+// 隐私政策。Chrome / Edge 商店都要求一个公开地址,但这页不是为上架凑的:
+// 这产品全部说服力都建立在「我不越界」上,那就得把边界写清楚,而且写成人话。
+const PRIVACY = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私说明 · BK漂流瓶</title>
+<meta name="description" content="BK漂流瓶收集什么、不收集什么、存在哪里、怎么删掉。">
+<link rel="canonical" href="__ORIGIN__/privacy">
+<style>
+:root{--deep:#071a2b;--mid:#0d2c46;--card:#10344f;--line:#1e4a6d;--ink:#e8f2fa;--dim:#8fb3cc;--glow:#4dd0e1;--amber:#ffcf6e}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:linear-gradient(180deg,#04101d,var(--deep) 40%,#0a2438);color:var(--ink);line-height:1.9;min-height:100vh}
+.wrap{max-width:680px;margin:0 auto;padding:44px 20px 70px}
+h1{font-size:24px;letter-spacing:1px;margin-bottom:6px}
+.sub{color:var(--dim);font-size:14px;margin-bottom:30px}
+h2{font-size:17px;margin:30px 0 10px;color:var(--glow)}
+p{margin-bottom:12px;font-size:15px}
+ul{margin:0 0 14px 20px}
+li{margin-bottom:8px;font-size:15px}
+b{color:var(--amber)}
+code{background:var(--card);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-size:13.5px}
+a{color:var(--glow)}
+.box{background:var(--mid);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:18px 0}
+.foot{margin-top:36px;padding-top:18px;border-top:1px solid var(--line);color:var(--dim);font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>隐私说明</h1>
+<div class="sub">BK漂流瓶 · 网站与 Chrome / Edge 插件</div>
+
+<div class="box">
+<p><b>一句话:</b> 我们不知道你是谁,也不知道你平时看什么。只知道你亲手贴进来的那几条链接。</p>
+</div>
+
+<h2>不收集什么</h2>
+<ul>
+<li><b>不读你的浏览记录。</b> 网页版根本没有这个能力;插件版确实有(<code>chrome.history</code>),但没有申请这个权限 —— 打开商店的安装页可以自己核对权限清单。完整的观看历史能反推出的东西远超一个人愿意分享的范围。</li>
+<li><b>不要账号。</b> 没有注册、没有邮箱、没有手机号、没有密码,也没有第三方登录。</li>
+<li><b>没有留言框。</b> 瓶子里只放链接,所以也不存在需要审核的自由文本。</li>
+<li><b>不用第三方统计、不投广告、不卖数据。</b> 页面上没有 Google Analytics 之类的脚本。</li>
+</ul>
+
+<h2>收集什么</h2>
+<ul>
+<li><b>你扔进来的视频链接</b>,以及从 YouTube / B站 公开接口取回的标题、作者、封面地址。这些是公开的,也是别人捞瓶时要看的内容。</li>
+<li><b>一串随机 id</b>(存在你浏览器的 localStorage 里),用来把瓶子记在你名下、给你回执、以及不把同一个瓶子重复给你。它由你的浏览器生成,不含任何个人信息,清掉浏览器数据就没了。</li>
+<li><b>你捞过哪些瓶子、说过哪些有意思</b>,用来避免重复和做质量排序。</li>
+<li><b>访问日期和 IP</b>:IP 只用于「每个 IP 每天最多扔几瓶」这个限制,不落库、不做画像。</li>
+</ul>
+
+<h2>插件多要了什么</h2>
+<p>插件的权限清单只有 <code>storage</code>,加上三个域名的访问权:<code>b.bking.film</code>、<code>www.youtube.com</code>、<code>www.bilibili.com</code>。</p>
+<ul>
+<li>没有 <code>history</code>、没有 <code>tabs</code>、没有 <code>&lt;all_urls&gt;</code>。</li>
+<li>在 YouTube / B站 页面上,插件<b>只在你主动点「装进瓶子」的那一刻</b>读当前这一个页面的视频 id、标题、封面和频道名。不点就什么都不读。</li>
+<li><b>不接管你的新标签页,也不改你的主页或搜索引擎。</b></li>
+<li>攒着待扔的清单只存在你自己电脑上(<code>chrome.storage.local</code>),不上传。</li>
+</ul>
+
+<h2>存在哪里</h2>
+<p>瓶子存在 Cloudflare Workers KV(全球边缘存储)。网站由 Cloudflare 托管,它作为基础设施会看到常规的访问日志。除此之外没有任何第三方能拿到这些数据。</p>
+
+<h2>怎么删掉</h2>
+<ul>
+<li><b>删掉你的身份:</b> 清掉本站的浏览器数据(localStorage)就行,那串随机 id 一起消失。之后你就是个全新的陌生人。</li>
+<li><b>删掉某个瓶子:</b> 因为没有账号体系,我无法验证一个瓶子是不是你的。想撤掉某一瓶,来 <a href="https://discord.com/invite/uT6xryB" target="_blank" rel="noopener">Discord</a> 说一声,把瓶子里的链接告诉我,我手动删。</li>
+<li><b>看到不该出现的内容:</b> 同样来 Discord 说,我会处理。</li>
+</ul>
+
+<h2>会变吗</h2>
+<p>会。但这页和<a href="https://github.com/bkingfilm/bk-bottle" target="_blank" rel="noopener">全部源代码</a>一起放在 GitHub 上,任何改动都有提交记录,你可以自己去看,而不是只能听我说。</p>
+
+<div class="foot">
+最后更新 2026-07-28 · <a href="__ORIGIN__/">回到漂流瓶</a> · <a href="https://github.com/bkingfilm/bk-bottle" target="_blank" rel="noopener">源码</a>
+</div>
+</div>
+</body>
+</html>
+`;
+
 // 最小 service worker:只为满足「可安装」条件,不做离线缓存(内容本来就要联网)
 const SW = "self.addEventListener('install',function(){self.skipWaiting()});"
   + "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim())});"
@@ -620,8 +703,16 @@ async function route(req, env) {
           '<?xml version="1.0" encoding="UTF-8"?>\n' +
           '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
           "  <url><loc>" + CANON + "/</loc><changefreq>weekly</changefreq></url>\n" +
+          "  <url><loc>" + CANON + "/privacy</loc><changefreq>yearly</changefreq></url>\n" +
           "</urlset>\n",
           { headers: { "Content-Type": "application/xml; charset=utf-8" } });
+      }
+      // 插件上商店必须给一个公开的隐私政策地址。不套法律模板:这产品的隐私
+      // 承诺本来就该说得让人看得懂,写成一页普通话反而更像真的
+      if (p === "/privacy" || p === "/privacy.html") {
+        return new Response(PRIVACY.split("__ORIGIN__").join(url.origin), {
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
       }
       if (p === "/" || p === "/index.html") {
         // 分享卡片的 og 标签要绝对地址,注入当前 origin,换域名不用改 HTML
