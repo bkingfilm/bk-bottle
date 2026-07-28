@@ -17,10 +17,10 @@
 ```bash
 cd extension
 python check.py     # 先自查，通过了再打包
-python pack.py      # 输出 dist/bk-bottle-0.1.0.zip
+python pack.py      # 输出 dist/bk-bottle-0.1.1.zip
 ```
 
-传 `dist/bk-bottle-0.1.0.zip`。
+传 `dist/bk-bottle-0.1.1.zip`。
 
 ---
 

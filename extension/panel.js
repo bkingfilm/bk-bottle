@@ -18,6 +18,13 @@ document.addEventListener("DOMContentLoaded", function () {
   elWho = document.getElementById("who");
   elReceipt = document.getElementById("receipt");
 
+  // 版本号从 manifest 读,别在 HTML 里写死 —— 写死了每次升版本要改两个地方,
+  // 迟早忘一个
+  var ver = document.getElementById("ver");
+  if (ver && chrome.runtime && chrome.runtime.getManifest) {
+    ver.textContent = "v" + chrome.runtime.getManifest().version;
+  }
+
   btnThrow.onclick = throwPending;
   document.getElementById("btnAgain").onclick = fish;
 

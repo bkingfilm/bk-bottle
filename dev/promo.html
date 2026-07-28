@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>小宣传图 440x280</title>
+<style>
+/* Edge / Chrome 商店的小宣传图位,440x280。用 headless 截图生成:
+   chrome --headless --screenshot=out.png --window-size=440,280 file:///.../dev/promo.html
+   放在 dev/ 下,不进发布包。 */
+html, body { margin: 0; padding: 0; }
+html {
+  width: 440px; height: 280px; overflow: hidden;
+  background: radial-gradient(ellipse at 30% 8%, #0d2c46, #04101d 76%);
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+  color: #e8f2fa;
+}
+.wave { font-size: 44px; line-height: 1; margin-bottom: 12px; }
+h1 { font-size: 27px; letter-spacing: 1px; margin: 0 0 10px; font-weight: 700; }
+p { font-size: 14.5px; line-height: 1.7; color: #8fb3cc; margin: 0; text-align: center; }
+p b { color: #4dd0e1; font-weight: 600; }
+.addr {
+  margin-top: 16px; padding: 4px 14px;
+  font-family: ui-monospace, Consolas, monospace; font-size: 12.5px; letter-spacing: .8px;
+  color: #4dd0e1; background: rgba(13, 44, 70, .85);
+  border: 1px solid #1e4a6d; border-radius: 999px;
+}
+</style>
+</head>
+<body>
+<div class="wave">🌊🍾</div>
+<h1>BK漂流瓶</h1>
+<p>捞一个陌生人<b>正在看的视频</b><br>不读浏览记录，不要账号</p>
+<span class="addr">b.bking.film</span>
+</body>
+</html>

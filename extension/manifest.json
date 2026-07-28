@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "BK漂流瓶 · 和陌生人交换正在看的视频",
-  "version": "0.1.0",
-  "description": "每开一个新标签页，捞一个陌生人正在看的视频。不读浏览记录，不要账号。",
+  "version": "0.1.1",
+  "description": "点一下工具栏的瓶子，捞一个陌生人正在看的视频。不读浏览记录，不要账号，不碰你的新标签页。",
   "icons": {
     "16": "icons/icon-16.png",
     "32": "icons/icon-32.png",
