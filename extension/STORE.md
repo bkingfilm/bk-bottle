@@ -5,7 +5,7 @@
 | 商店 | 状态 | 时间 |
 |---|---|---|
 | **Edge Add-ons** | **In review**（已提交，微软说 7 个工作日内回） | 2026-07-29 提交 |
-| Chrome Web Store | 未提交（后台禁止脚本化，要手填，见 STORE-CHROME.md） | — |
+| **Chrome Web Store** | **待审核**（已提交送审，1-3 天出结果，结果发到 chozuihei@gmail.com） | 2026-07-29 提交 |
 
 Edge 侧已备案的身份信息（以后收紧 CORS、查商店页都要用）：
 
@@ -18,9 +18,23 @@ Publisher   导演BK（Individual 账号，Verification Status: Authorized）
 审核备注    extension/CERT-NOTES.txt（1932 字符，限 2000）
 ```
 
-**别急着用 CRX ID 收紧 worker 的 CORS。** 本地开发版加载的是另一个 id
-（kojnijdnomgpoebfnochpafnoncheilf），Chrome 商店发布后还会有第三个。等三个
-都齐了再一次性改成白名单，现在收紧会让自己装的开发版立刻捞不到瓶。
+Chrome 侧已备案的身份信息（2026-07-29 提交，BK 手填 + Claude 看屏推剪贴板）：
+
+```
+CRX ID      ahbgoaaojaanogcampbekjmiocmnnbbk
+开发者账号  chozuihei@gmail.com（$5 已付，联系邮箱已验证）
+提交版本    0.1.1（与 Edge 同一个 zip）
+类别/语言   娱乐 / 中文（中国）
+数据申报    只勾「网站内容」+ 三条声明全勾；远程代码选「否」
+测试说明    CERT-NOTES.txt 同款
+官方网址    未选（bking.film 域名 07-29 已在 Search Console 验证，
+            但提交时下拉尚未同步出来；下次更新版本时可补选）
+```
+
+**三个 CRX ID 已齐，可以收紧 worker 的 CORS 了**（等两边都过审再动手，
+免得审核期间改后端节外生枝）：
+开发版 kojnijdnomgpoebfnochpafnoncheilf / Edge koekmdgnpbleaelfbkiinnhjdmbpmigg /
+Chrome ahbgoaaojaanogcampbekjmiocmnnbbk
 
 ---
 
