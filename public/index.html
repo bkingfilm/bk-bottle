@@ -151,16 +151,6 @@ input[type=text] { margin-top: 12px; }
   color: var(--amber); font-size: 14px; line-height: 1.8;
 }
 #nudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-/* 装到桌面的提示。用青色跟琥珀色的 nudge 区分开:那个是社交提醒,这个是工具入口 */
-#install {
-  display: none; margin-top: 14px; padding: 13px 16px; text-align: center;
-  background: linear-gradient(135deg, rgba(77, 208, 225, .12), rgba(77, 208, 225, .05));
-  border: 1px solid rgba(77, 208, 225, .45); border-radius: 12px;
-  color: var(--glow); font-size: 14px; line-height: 1.8;
-}
-#install .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
-#install .step { color: var(--dim); font-size: 13px; margin-top: 8px; line-height: 1.9; }
-#install .step b { color: var(--ink); }
 #overflow {
   display: none; margin-top: 12px; padding: 10px 14px; font-size: 13px; line-height: 1.7;
   background: rgba(255, 154, 138, .1); border: 1px solid rgba(255, 154, 138, .5);
@@ -303,7 +293,6 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <button class="big" id="btnFish"></button>
     <div class="msg" id="msgFish"></div>
     <div id="nudge"></div>
-    <div id="install"></div>
     <div id="fishResult" style="margin-top:16px"></div>
   </div>
 
@@ -392,9 +381,7 @@ var I18N = {
     },
     nudge: "🍾 你已经捞了 3 瓶别人的，海里还没有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "继续捞",
-    install: "🌊 装到桌面，下次想换换口味，点一下就进来了<br>不用注册，不会给你推消息",
-    installGo: "装到桌面", installLater: "不用了",
-    installIos: "点底下那个 <b>分享</b> 按钮，往下翻，选「<b>添加到主屏幕</b>」",
+    voteHint: "看完了回来说一声有意思，好瓶子会漂给更多人",
     shareText: function (lines, origin) {
       return "🍾 捞到一瓶陌生人正在看的片单：\n" + lines
         + "\n\n这是 BK漂流瓶，大家把自己真实在看的视频扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
@@ -451,9 +438,7 @@ var I18N = {
     },
     nudge: "🍾 你已經撈了 3 瓶別人的，海裡還沒有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "繼續撈",
-    install: "🌊 裝到桌面，下次想換換口味，點一下就進來了<br>不用註冊，不會給你推通知",
-    installGo: "裝到桌面", installLater: "不用了",
-    installIos: "點下面那個 <b>分享</b> 按鈕，往下滑，選「<b>加入主畫面</b>」",
+    voteHint: "看完了回來說一聲有意思，好瓶子會漂給更多人",
     shareText: function (lines, origin) {
       return "🍾 撈到一瓶陌生人正在看的片單：\n" + lines
         + "\n\n這是 BK漂流瓶，大家把自己真實在看的影片扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
@@ -847,55 +832,12 @@ function maybeNudge() {
   n.style.display = "block";
 }
 
-// 装到桌面:工具型的东西没人天天来,想起来的时候能不能马上打开才是命。
-// 图标躺在桌面上,不用记网址也不用搜。捞到第 2 瓶再提(第 1 瓶还没建立起「有用」的判断),
-// 提过一次就不再烦,装不了的浏览器干脆不提,免得给出照做不了的指令。
-var deferredInstall = null;
+// isStandalone 只用于捞瓶上报里的 pwa 字段(已装用户统计),装桌面提示已整体下线
 var isStandalone = false;
 try {
   isStandalone = window.matchMedia("(display-mode: standalone)").matches
     || navigator.standalone === true;
 } catch (e) {}
-
-window.addEventListener("beforeinstallprompt", function (e) {
-  e.preventDefault();
-  deferredInstall = e;
-});
-
-function hideInstall() { $("install").style.display = "none"; }
-
-function doInstall() {
-  hideInstall();
-  if (!deferredInstall) return;
-  deferredInstall.prompt();
-  deferredInstall = null;
-}
-
-// iOS 没有 beforeinstallprompt,只有 Safari 本体能加主屏幕,壳浏览器都不行
-function iosSafari() {
-  var ua = navigator.userAgent;
-  var ios = /iphone|ipad|ipod/i.test(ua)
-    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
-  return ios && /safari/i.test(ua) && !/crios|fxios|edgios|micromessenger/i.test(ua);
-}
-
-function maybeInstall() {
-  if (isStandalone || localStorage.getItem("yb_installask")) return;
-  if (fishCount < 2) return;
-  // nudge 正占着位置就让它先说,下一瓶再提装桌面,不叠两条提示
-  if ($("nudge").style.display === "block") return;
-  var ios = iosSafari();
-  if (!deferredInstall && !ios) return;
-  localStorage.setItem("yb_installask", "1");
-  var n = $("install");
-  n.innerHTML = T.install
-    + (deferredInstall
-      ? '<div class="row"><button class="fol" onclick="doInstall()">' + T.installGo + "</button>"
-        + '<button class="fol" onclick="hideInstall()">' + T.installLater + "</button></div>"
-      : '<div class="step">' + T.installIos + "</div>"
-        + '<div class="row"><button class="fol" onclick="hideInstall()">' + T.installLater + "</button></div>");
-  n.style.display = "block";
-}
 
 var lastBottle = null;
 var lastBy = "";
@@ -1161,6 +1103,7 @@ function doFish(isDemo) {
       d.videos.forEach(function (v) { html += videoCardHtml(v); });
       html += "</div>"
         + '<div class="wm">🌊 BK漂流瓶 · ' + location.host + "</div>"
+        + '<div class="by">' + T.voteHint + "</div>"
         + '<div class="fb" id="fb">'
         + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'
         + T.voteGood + "</button>"
@@ -1170,9 +1113,8 @@ function doFish(isDemo) {
       lastBottle = d.videos;
       lastBy = d.by || "";
       box.innerHTML = html;
-      if (!isDemo) {   // 演示不算捞瓶次数,也不触发扔瓶提示和装桌面提示
+      if (!isDemo) {   // 演示不算捞瓶次数,也不触发扔瓶提示
         maybeNudge();
-        maybeInstall();
       }
     })
     .catch(function () {

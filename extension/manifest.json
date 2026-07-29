@@ -13,7 +13,7 @@
   "host_permissions": [
     "https://b.bking.film/*",
     "https://www.youtube.com/*",
-    "https://www.bilibili.com/*"
+    "https://www.bilibili.com/video/*"
   ],
   "background": { "service_worker": "sw.js" },
   "action": {

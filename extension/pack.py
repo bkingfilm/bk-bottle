@@ -12,7 +12,7 @@ import os
 import zipfile
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SKIP_EXT = {".zip", ".py"}
+SKIP_EXT = {".zip", ".py", ".md", ".txt"}
 
 
 def should_skip(rel):

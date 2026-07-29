@@ -83,7 +83,7 @@ a{color:var(--glow)}
 <h2>插件多要了什么</h2>
 <p>插件的权限清单只有 <code>storage</code>，加上三个域名的访问权：<code>b.bking.film</code>、<code>www.youtube.com</code>、<code>www.bilibili.com</code>。</p>
 <ul>
-<li>没有 <code>history</code>、没有 <code>tabs</code>、没有 <code>&lt；all_urls&gt；</code>。</li>
+<li>没有 <code>history</code>、没有 <code>tabs</code>、没有 <code>&lt;all_urls&gt;</code>。</li>
 <li>在 YouTube / B站 页面上，插件<b>只在你主动点「装进瓶子」的那一刻</b>读当前这一个页面的视频 id、标题、封面和频道名。不点就什么都不读。</li>
 <li><b>不接管你的新标签页，也不改你的主页或搜索引擎。</b></li>
 <li>攒着待扔的清单只存在你自己电脑上（<code>chrome.storage.local</code>），不上传。</li>
@@ -587,10 +587,6 @@ async function handleAdmin(url, env) {
     + "<div>扔瓶转化率<b>"
     + (s.visitors ? Math.round((s.devices / s.visitors) * 100) + "%" : "—")
     + "</b></div>"
-    + "<div>装到桌面的人<b>" + s.installed + "</b></div>"
-    + "<div>装桌面率<b>"
-    + (s.visitors ? Math.round((s.installed / s.visitors) * 100) + "%" : "—")
-    + "</b></div>"
     + "<div>回来过的人<b>" + s.returning + "</b></div>"
     + "<div>回访率<b>"
     + (s.visitors ? Math.round((s.returning / s.visitors) * 100) + "%" : "—")
@@ -598,6 +594,27 @@ async function handleAdmin(url, env) {
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
     + "<div>🌟 有意思<b>" + s.good + "</b></div>"
     + "<div>🫧 一般（07-28 已撤）<b>" + s.bad + "</b></div></div>";
+  // 池子健康度:回头率是手段不是目标,海里有没有新鲜瓶子才是。
+  // 全部从已拉取的 stat: 快照上算,不多花一次 KV 操作;快照不满 30 天就用最早那天当基线
+  if (days.length) {
+    const cutoff = new Date(Date.now() - 30 * 86400000).toISOString().slice(0, 10);
+    let base = days[0];
+    for (const d of days) { if (d.day <= cutoff) base = d; else break; }
+    const span = Math.max(1, Math.round(
+      (Date.now() - new Date(base.day + "T00:00:00Z").getTime()) / 86400000));
+    const nb = s.total - base.total;
+    const nr = s.real - (base.real || 0);
+    // 早期快照没有 visitors 字段,当 0 减会把「近N天」算成「开站以来」,缺基线宁可不显示
+    const nv = (s.visitorsCapped || base.visitors === undefined)
+      ? null : s.visitors - base.visitors;
+    html += "<h2>池子健康度（近" + span + "天）</h2><div class=kpi>"
+      + "<div>新瓶<b>" + nb + "</b></div>"
+      + "<div>其中真人瓶<b>" + nr + "</b></div>"
+      + "<div>新捞瓶人<b>" + (nv === null ? "—" : nv) + "</b></div>"
+      + "<div>人均摊到新瓶<b>"
+      + (nv ? (nb / nv).toFixed(2) : "—")
+      + "</b></div></div>";
+  }
   const srcRows = Object.keys(s.bySrc).sort((a, b) => s.bySrc[b].n - s.bySrc[a].n);
   if (srcRows.length) {
     html += "<h2>来源渠道</h2><div class=overflow><table>"
