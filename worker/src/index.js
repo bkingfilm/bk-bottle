@@ -798,7 +798,8 @@ async function route(req, env) {
           good += m.g || 0;
           fished += m.f || 0;
         }
-        return json({ bottles, good, fished, name: nickname(dev) });
+        // yys(有意思值):账号贡献值,1 个 🌟 = 2 yys。纯派生不落库,规则只在这一处
+        return json({ bottles, good, fished, yys: good * 2, name: nickname(dev) });
       }
       if (p === "/api/fish") return handleFish(req, url, env);
     }

@@ -250,7 +250,11 @@ function receipt(lastGood) {
         elReceipt.classList.add("on");
       }
       state.myName = m.name || "";
-      if (state.myName) elWho.innerHTML = "你是 <b>" + esc(state.myName) + "</b>";
+      if (state.myName) {
+        var yys = m.yys || (m.good || 0) * 2;
+        elWho.innerHTML = "你是 <b>" + esc(state.myName) + "</b>"
+          + (yys ? " · <b>" + yys + "</b> yys" : "");
+      }
       save({ lastGood: g });
     })
     .catch(function () {});

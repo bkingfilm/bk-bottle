@@ -354,6 +354,7 @@ var I18N = {
     myNameNew: function (n) { return "你在海里的代号是 " + n + "，扔出去的瓶子都挂这个名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 个 🌟"; },
+    yysGot: function (y) { return "，攒了 <b>" + y + "</b> yys"; },
     fishedOnly: "，已经有人捞到过", drifting: "，还在海上漂",
     cheer: function (n) { return "🌟 你不在的时候，又有 " + n + " 个人说你的瓶子有意思<br>要不要再扔一瓶"; },
     folCount: function (n) { return "⭐ 你记住了 <b>" + n + "</b> 个瓶主，他们扔新瓶你会先捞到"; },
@@ -411,6 +412,7 @@ var I18N = {
     myNameNew: function (n) { return "你在海裡的代號是 " + n + "，扔出去的瓶子都掛這個名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 個 🌟"; },
+    yysGot: function (y) { return "，攢了 <b>" + y + "</b> yys"; },
     fishedOnly: "，已經有人撈到過", drifting: "，還在海上漂",
     cheer: function (n) { return "🌟 你不在的時候，又有 " + n + " 個人說你的瓶子有意思<br>要不要再扔一瓶"; },
     folCount: function (n) { return "⭐ 你記住了 <b>" + n + "</b> 個瓶主，他們扔新瓶你會先撈到"; },
@@ -553,7 +555,7 @@ function refreshMine() {
         return;
       }
       var t = T.myNameHas(name, d.bottles);
-      if (d.good) t += T.goodGot(d.good);
+      if (d.good) t += T.goodGot(d.good) + T.yysGot(d.yys || d.good * 2);
       else if (d.fished) t += T.fishedOnly;
       else t += T.drifting;
       $("myName").innerHTML = t;
