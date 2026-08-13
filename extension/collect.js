@@ -1,6 +1,6 @@
-// 在 YouTube / B站 的播放页上挂一个「装进瓶子」。
+// 在 YouTube / B站 的播放页和 Steam 的商店页/资料页上挂一个「装进瓶子」。
 //
-// 这里读的只有当前这一个页面的视频 id 和标题,而且是你主动点了才读。
+// 这里读的只有当前这一个页面的内容 id 和标题,而且是你主动点了才读。
 // 插件没有 history 权限,拿不到也不想拿你的浏览记录 — 那是这个产品的底线,
 // 不是省事。see README「不做什么」。
 (function collector() {
@@ -8,6 +8,16 @@
 
   function currentItem() {
     var host = location.hostname;
+    if (host === "store.steampowered.com") {
+      var s = location.pathname.match(/^\/app\/(\d{1,7})/);
+      if (!s) return null;
+      // 标题只是给待扔清单看的,服务端会按 appid 自己去 Steam 取权威元数据
+      var sh = document.getElementById("appHubAppName") || document.querySelector(".apphub_AppName");
+      return {
+        appid: s[1],
+        title: (sh ? sh.textContent : document.title).trim().slice(0, 120),
+      };
+    }
     if (host.indexOf("youtube.com") >= 0) {
       var m = location.search.match(/[?&]v=([A-Za-z0-9_-]{11})/);
       if (!m) return null;
@@ -46,10 +56,45 @@
       return document.querySelector("#top-level-buttons-computed")
         || document.querySelector("#actions-inner #menu");
     }
+    if (location.hostname === "store.steampowered.com") {
+      // 标题行右侧那块(社区中心按钮所在),没有就退到标题区。年龄门页两个都没有,不挂
+      return document.querySelector(".apphub_OtherSiteInfo")
+        || document.querySelector(".page_title_area");
+    }
     return document.querySelector(".video-toolbar-left, .toolbar-left, .video-toolbar");
   }
 
+  // Steam 资料页「最近活动」里的几个游戏,一键全装。只在点击时读当前页 DOM
+  function steamRecentItems() {
+    var out = [], seen = {};
+    var blocks = document.querySelectorAll(".recent_games .recent_game");
+    for (var i = 0; i < blocks.length; i++) {
+      var a = blocks[i].querySelector('a[href*="/app/"]');
+      var m = a && a.href.match(/\/app\/(\d{1,7})/);
+      if (!m || seen[m[1]]) continue;
+      seen[m[1]] = 1;
+      var n = blocks[i].querySelector(".game_name a") || blocks[i].querySelector(".game_name");
+      out.push({ appid: m[1], title: n ? n.textContent.trim().slice(0, 120) : "" });
+    }
+    return out;
+  }
+
+  function mountSteamProfile() {
+    if (document.getElementById(BTN_ID)) return;
+    var box = document.querySelector(".recent_games");
+    if (!box || !steamRecentItems().length) return;
+    var btn = document.createElement("button");
+    btn.id = BTN_ID;
+    btn.className = "ybottle-btn";
+    btn.type = "button";
+    btn.style.marginBottom = "8px";
+    btn.textContent = chrome.i18n.getMessage("collectSteam");
+    btn.onclick = function () { addMany(steamRecentItems(), btn); };
+    box.parentNode.insertBefore(btn, box);
+  }
+
   function mount() {
+    if (location.hostname === "steamcommunity.com") { mountSteamProfile(); return; }
     var item = currentItem();
     var old = document.getElementById(BTN_ID);
     if (!item) { if (old) old.remove(); return; }
@@ -61,36 +106,58 @@
     btn.id = BTN_ID;
     btn.className = "ybottle-btn";
     btn.type = "button";
-    btn.textContent = "🍾 装进瓶子";
+    btn.textContent = chrome.i18n.getMessage("collectAdd");
     btn.onclick = function () { add(item, btn); };
     host.appendChild(btn);
   }
 
+  function keyOf(x) { return x.appid || x.bvid || x.vid; }
+
   function add(item, btn) {
     chrome.storage.local.get(["pending"], function (d) {
       var pending = Array.isArray(d.pending) ? d.pending : [];
-      var key = item.bvid || item.vid;
-      if (pending.some(function (p) { return (p.bvid || p.vid) === key; })) {
-        flash(btn, "✅ 已经装过了");
+      var key = keyOf(item);
+      if (pending.some(function (p) { return keyOf(p) === key; })) {
+        flash(btn, chrome.i18n.getMessage("collectDup"));
         return;
       }
       // 网页那边一瓶最多 10 条,这里保持一致,满了就提示先扔出去
       if (pending.length >= 10) {
-        flash(btn, "🍾 瓶子满了，先扔出去");
+        flash(btn, chrome.i18n.getMessage("collectFull"));
         return;
       }
       pending.push(item);
       chrome.storage.local.set({ pending: pending }, function () {
-        flash(btn, "🍾 装进瓶子（" + pending.length + "）");
+        flash(btn, chrome.i18n.getMessage("collectAddN", [String(pending.length)]));
       });
     });
   }
 
-  function flash(btn, text) {
+  function addMany(items, btn) {
+    chrome.storage.local.get(["pending"], function (d) {
+      var pending = Array.isArray(d.pending) ? d.pending : [];
+      var added = 0;
+      items.forEach(function (item) {
+        if (pending.length >= 10) return;
+        if (pending.some(function (p) { return keyOf(p) === keyOf(item); })) return;
+        pending.push(item);
+        added++;
+      });
+      if (!added) {
+        flash(btn, chrome.i18n.getMessage(pending.length >= 10 ? "collectFull" : "collectDup"), "collectSteam");
+        return;
+      }
+      chrome.storage.local.set({ pending: pending }, function () {
+        flash(btn, chrome.i18n.getMessage("collectGamesN", [String(added)]), "collectSteam");
+      });
+    });
+  }
+
+  function flash(btn, text, resetKey) {
     btn.textContent = text;
     btn.classList.add("ybottle-ok");
     setTimeout(function () {
-      btn.textContent = "🍾 装进瓶子";
+      btn.textContent = chrome.i18n.getMessage(resetKey || "collectAdd");
       btn.classList.remove("ybottle-ok");
     }, 1800);
   }

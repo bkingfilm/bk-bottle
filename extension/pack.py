@@ -17,6 +17,10 @@ SKIP_EXT = {".zip", ".py", ".md", ".txt"}
 
 def should_skip(rel):
     name = os.path.basename(rel)
+    # _locales 是下划线前缀里唯一的例外:Chrome 规定多语言文案必须放在这个名字下。
+    # 漏掉它,manifest 里的 __MSG_extName__ 就查不到词条,插件直接加载失败
+    if rel.split(os.sep)[0] == "_locales":
+        return False
     if name.startswith("_") or name.startswith("."):
         return True
     if os.path.splitext(name)[1] in SKIP_EXT:

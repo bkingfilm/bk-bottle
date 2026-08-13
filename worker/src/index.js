@@ -76,7 +76,7 @@ a{color:var(--glow)}
 <ul>
 <li><b>你扔进来的视频链接</b>，以及从 YouTube / B站 公开接口取回的标题、作者、封面地址。这些是公开的，也是别人捞瓶时要看的内容。</li>
 <li><b>一串随机 id</b>（存在你浏览器的 localStorage 里），用来把瓶子记在你名下、给你回执、以及不把同一个瓶子重复给你。它由你的浏览器生成，不含任何个人信息，清掉浏览器数据就没了。</li>
-<li><b>你捞过哪些瓶子、说过哪些有意思</b>，用来避免重复和做质量排序。</li>
+<li><b>你捞过哪些瓶子、收藏过哪些</b>，用来避免重复和做质量排序。</li>
 <li><b>访问日期和 IP</b>：IP 只用于「每个 IP 每天最多扔几瓶」这个限制，不落库、不做画像。</li>
 </ul>
 
@@ -118,6 +118,9 @@ const SW = "self.addEventListener('install',function(){self.skipWaiting()});"
 const VID_RE = /^[A-Za-z0-9_-]{11}$/;
 const LIST_RE = /^[A-Za-z0-9_-]{12,50}$/;
 const BILI_RE = /^(BV[A-Za-z0-9]{10}|av\d{1,12})$/;
+const STEAM_RE = /^\d{1,7}$/;
+// Steam 官方图 CDN 都在 steamstatic.com 下(shared.akamai / shared.cloudflare / cdn.* 等)
+const STEAM_IMG_RE = /^https:\/\/[a-z0-9.-]+\.steamstatic\.com\//;
 const THROWS_PER_DAY = 5;
 const MAX_BODY = 16384;
 
@@ -132,12 +135,40 @@ const SENSITIVE = [
   "共产党", "共產黨", "中共", "文革", "大跃进", "大躍進", "刘晓波", "劉曉波",
   "四通桥", "四通橋", "白纸运动", "白紙運動", "翻墙", "翻牆", "润学", "潤學",
   "政治庇护", "政治庇護", "政治犯", "维权", "維權", "异见", "異見",
+  // 涉黄(2026-08-12 BK 令扩充)
+  "色情", "情色", "无码", "無碼", "里番", "裏番", "黄片", "黃片", "三级片", "三級片",
+  "卖淫", "賣淫", "嫖娼", "援交", "约炮", "約炮", "工口", "18禁", "成人影片", "成人向",
+  // 违法
+  "赌博", "賭博", "博彩", "网赌", "網賭", "洗钱", "洗錢", "毒品", "大麻", "冰毒",
+  "枪支", "槍支", "传销", "傳銷",
 ];
+
+// 拉丁词单独一张表,小写比对,标题大小写混写逃不掉。
+// 别加太短的词:jav 会命中 javascript 这种,加之前先想想会不会误伤正常词
+const SENSITIVE_LATIN = ["porn", "pornhub", "onlyfans", "hentai", "xvideos", "r18"];
+
+// 时政类频道黑名单(2026-08-12 BK 令):这些号无论发什么,整瓶隔离。
+// 按 author 子串匹配,简繁双版本;名单可随时续补
+const BLOCK_AUTHORS = [
+  "文昭", "江峰时刻", "江峰時刻", "石涛", "石濤", "王剑每日观察", "王劍每日觀察",
+  "路德社", "天亮时光", "天亮時光", "大康有话说", "大康有話說", "公子时评", "公子時評",
+  "明镜", "明鏡", "新唐人", "大纪元", "大紀元", "美国之音", "美國之音",
+  "自由亚洲", "自由亞洲", "新闻拍案惊奇", "新聞拍案驚奇", "章天亮",
+  "郭文贵", "郭文貴", "王局拍案", "李老师不是你老师", "李老師不是你老師",
+  "德国之声", "德國之聲",
+];
+const BLOCK_AUTHORS_LATIN = ["voa", "rfa chinese", "bbc news 中文", "dw中文"];
 
 function hitsSensitive(items) {
   return items.some((x) => {
     const text = (x.title || "") + (x.author || "");
-    return SENSITIVE.some((w) => text.includes(w));
+    if (SENSITIVE.some((w) => text.includes(w))) return true;
+    const lower = text.toLowerCase();
+    if (SENSITIVE_LATIN.some((w) => lower.includes(w))) return true;
+    const author = String(x.author || "");
+    if (!author) return false;
+    return BLOCK_AUTHORS.some((w) => author.includes(w))
+      || BLOCK_AUTHORS_LATIN.some((w) => author.toLowerCase().includes(w));
   });
 }
 
@@ -286,11 +317,54 @@ function sanitizeBilis(raw) {
     .filter((x) => x.title && !seen.has(x.bvid) && seen.add(x.bvid));
 }
 
-// 瓶子平台标签: 纯B站 bili / 纯YouTube yt / 混装 mix。存进 KV metadata 供捞瓶筛选。
+// Steam 元数据走服务端验证(appdetails 08-10 探针实测机房出口全绿),
+// 拿不到时回落扔瓶人浏览器带上来的标题/封面(封面域名白名单清洗,同 B站 方案)
+function sanitizeSteams(raw) {
+  if (!Array.isArray(raw)) return [];
+  const seen = new Set();
+  return raw
+    .filter((x) => x && typeof x === "object" && STEAM_RE.test(String(x.id || "")))
+    .map((x) => ({
+      appid: String(x.id),
+      title: String(x.title || "").slice(0, 100),
+      thumb: STEAM_IMG_RE.test(x.thumb) ? String(x.thumb).slice(0, 300) : "",
+    }))
+    .filter((x) => !seen.has(x.appid) && seen.add(x.appid));
+}
+
+async function fetchSteamMeta(appid) {
+  const url = "https://store.steampowered.com/api/appdetails?appids=" + appid
+    + "&filters=basic,content_descriptors&l=schinese";
+  try {
+    const r = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0" },
+      signal: AbortSignal.timeout(4000),
+    });
+    if (!r.ok) return { fail: true };   // 限流/网络问题:回落客户端元数据
+    const d = await r.json();
+    const e = d && d[appid];
+    if (!e || !e.success || !e.data || !e.data.name) return { missing: true };   // Steam 明确说没有,拒收
+    // 成人内容判定用 Steam 官方描述符:3=纯成人性内容 4=频繁裸露,命中即黄油,整瓶隔离。
+    // 1(轻度裸露,赛博朋克/巫师这类大作都带)不算,否则 3A 全军覆没
+    const ids = (e.data.content_descriptors && e.data.content_descriptors.ids) || [];
+    return {
+      title: String(e.data.name).slice(0, 100),
+      thumb: STEAM_IMG_RE.test(e.data.header_image) ? String(e.data.header_image).slice(0, 300) : "",
+      adult: ids.indexOf(3) >= 0 || ids.indexOf(4) >= 0,
+    };
+  } catch (e) {
+    return { fail: true };
+  }
+}
+
+// 瓶子平台标签: 单一来源用各自标签,跨来源混装一律 mix。存进 KV metadata 供后台统计。
 function bottlePlatform(videos) {
   const hasBili = videos.some((v) => v.bvid);
   const hasYt = videos.some((v) => v.vid || v.list);
-  return hasBili && hasYt ? "mix" : hasBili ? "bili" : "yt";
+  const hasSteam = videos.some((v) => v.appid);
+  const kinds = (hasBili ? 1 : 0) + (hasYt ? 1 : 0) + (hasSteam ? 1 : 0);
+  if (kinds > 1) return "mix";
+  return hasBili ? "bili" : hasSteam ? "steam" : "yt";
 }
 
 async function readBody(req, reqUrl) {
@@ -328,17 +402,29 @@ async function handleThrow(req, reqUrl, env) {
   let lists = Array.isArray(body.data.lists) ? body.data.lists : [];
   lists = [...new Set(lists)].filter((x) => typeof x === "string" && LIST_RE.test(x));
   const bilis = sanitizeBilis(body.data.bilis);
-  const total = vids.length + lists.length + bilis.length;
+  const steamsIn = sanitizeSteams(body.data.steams);
+  const total = vids.length + lists.length + bilis.length + steamsIn.length;
   if (total < 1 || total > 10) {
-    return json({ error: "需要 1 到 10 个有效的 YouTube 或 B站 链接" }, 400);
+    return json({ error: "需要 1 到 10 个有效的 YouTube、B站 或 Steam 链接" }, 400);
   }
   // B站 元数据由扔瓶人浏览器 JSONP 拿到后带上来(机房 IP 调 B站 接口被 -412 全封)
   const device = String(body.data.device || "").slice(0, 64);
 
-  const [vmetas, lmetas] = await Promise.all([
+  const [vmetas, lmetas, smetas] = await Promise.all([
     Promise.all(vids.map(fetchMeta)),
     Promise.all(lists.map(fetchListMeta)),
+    Promise.all(steamsIn.map((s) => fetchSteamMeta(s.appid))),
   ]);
+  const steams = steamsIn
+    .map((s, i) => {
+      const m = smetas[i];
+      if (m.missing) return null;   // Steam 说这个 appid 不存在
+      // 验证不了就不收(2026-08-12 BK 谨慎令):黄油判定全靠官方成人描述符,
+      // 拿不到描述符还收客户端自报的标题,等于给投毒留了口子。宁可让正常用户重试
+      if (m.fail) return null;
+      return { appid: s.appid, title: m.title, author: "", thumb: m.thumb || s.thumb };
+    })
+    .filter(Boolean);
   const valid = vids
     .map((v, i) => ({ vid: v, title: vmetas[i][0], author: vmetas[i][1] || "" }))
     .filter((x) => x.title)
@@ -347,8 +433,9 @@ async function handleThrow(req, reqUrl, env) {
         .map((x, i) => ({ list: x, title: lmetas[i][0], author: lmetas[i][1] || "", thumb: lmetas[i][2] || "" }))
         .filter((x) => x.title)
     )
-    .concat(bilis);
-  if (!valid.length) return json({ error: "这些链接在 YouTube/B站 上都找不到对应内容" }, 400);
+    .concat(bilis)
+    .concat(steams);
+  if (!valid.length) return json({ error: "这些链接在 YouTube/B站/Steam 上都找不到对应内容" }, 400);
   if (tooConcentrated(valid.map((x) => x.author))) {
     return json({ error: "同一个频道的视频太多了，换着装点别的" }, 400);
   }
@@ -360,8 +447,9 @@ async function handleThrow(req, reqUrl, env) {
   const p = bottlePlatform(valid);
 
   const stamp = `${Date.now()}${Math.floor(Math.random() * 10000)}`;
-  // 涉政/违规内容影子删除:对扔瓶人返回正常成功,实际存入 q: 隔离区
-  const quarantine = hitsSensitive(valid);
+  // 涉政/涉黄/违法内容影子删除:对扔瓶人返回正常成功,实际存入 q: 隔离区。
+  // Steam 黄油按官方成人描述符判(见 fetchSteamMeta),回落路径拿不到描述符,靠巡查兜底
+  const quarantine = hitsSensitive(valid) || smetas.some((m) => m && m.adult);
   const id = (quarantine ? "q:" : "b:") + stamp;
   const nowSec = Math.floor(Date.now() / 1000);
   const bottle = { id, device, videos: valid, fans: [], fished: 0, ts: nowSec };
@@ -592,7 +680,7 @@ async function handleAdmin(url, env) {
     + (s.visitors ? Math.round((s.returning / s.visitors) * 100) + "%" : "—")
     + "</b></div>"
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
-    + "<div>🌟 有意思<b>" + s.good + "</b></div>"
+    + "<div>🌟 收藏<b>" + s.good + "</b></div>"
     + "<div>🫧 一般（07-28 已撤）<b>" + s.bad + "</b></div></div>";
   // 池子健康度:回头率是手段不是目标,海里有没有新鲜瓶子才是。
   // 全部从已拉取的 stat: 快照上算,不多花一次 KV 操作;快照不满 30 天就用最早那天当基线
@@ -637,7 +725,7 @@ async function handleAdmin(url, env) {
   html += "<h2>全部瓶子（新在前）</h2><div class=overflow><table>"
     + "<tr><th>来源</th><th>平台</th><th>条数</th><th>被捞</th><th>🌟</th><th>🫧</th><th>第一条视频</th></tr>";
   for (const r of s.rows) {
-    const pTag = r.p === "bili" ? "B站" : r.p === "mix" ? "混装" : "YT";
+    const pTag = r.p === "bili" ? "B站" : r.p === "mix" ? "混装" : r.p === "steam" ? "Steam" : "YT";
     html += "<tr><td>" + (r.seed ? "<span class=s>种子</span>" : "真人") + "</td><td>" + pTag
       + "</td><td>" + r.n
       + "</td><td>" + r.fished + "</td><td>" + r.g + "</td><td>" + r.b
@@ -763,19 +851,25 @@ async function route(req, env) {
         return json({ count: keys.length });
       }
       if (p === "/api/preview") {
-        // 装瓶前的预览:只调 oEmbed 拿标题,不碰 KV。B站由前端 JSONP 自己取
+        // 装瓶前的预览:只调 oEmbed / Steam appdetails 拿标题,不碰 KV。B站由前端 JSONP 自己取
         const vs = (url.searchParams.get("v") || "").split(",")
           .filter((x) => VID_RE.test(x)).slice(0, 10);
         const ls = (url.searchParams.get("l") || "").split(",")
           .filter((x) => LIST_RE.test(x)).slice(0, 10);
-        if (!vs.length && !ls.length) return json({ items: [] });
-        const [vm, lm] = await Promise.all([
+        const ss = (url.searchParams.get("s") || "").split(",")
+          .filter((x) => STEAM_RE.test(x)).slice(0, 10);
+        if (!vs.length && !ls.length && !ss.length) return json({ items: [] });
+        const [vm, lm, sm] = await Promise.all([
           Promise.all(vs.map(fetchMeta)),
           Promise.all(ls.map(fetchListMeta)),
+          Promise.all(ss.map(fetchSteamMeta)),
         ]);
         const items = vs.map((v, i) => ({ vid: v, title: vm[i][0] || "", author: vm[i][1] || "" }))
           .concat(ls.map((x, i) => ({
             list: x, title: lm[i][0] || "", author: lm[i][1] || "", thumb: lm[i][2] || "",
+          })))
+          .concat(ss.map((x, i) => ({
+            appid: x, title: sm[i].title || "", thumb: sm[i].thumb || "",
           })));
         return json({ items });
       }

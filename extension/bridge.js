@@ -5,6 +5,11 @@
 // 回执永远对不上。所以插件不发明身份,只从网页抄过来。
 //
 // content script 跑在隔离世界,但 localStorage 是同源共享的,直接读写即可。
+// 顺便告诉网页「这台浏览器已经装了插件」。网页靠它决定要不要显示装插件的入口 ——
+// 已经装了的人再看见一遍是纯打扰。用 DOM 属性而不是 postMessage:content script 跑在
+// 隔离世界,变量互相看不见,但 documentElement 是同一个。
+try { document.documentElement.setAttribute("data-yb-ext", "1"); } catch (e) {}
+
 (function syncIdentity() {
   function readList(key) {
     try {

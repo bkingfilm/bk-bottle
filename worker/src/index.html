@@ -140,6 +140,7 @@ input[type=text] { margin-top: 12px; }
   border: 1px solid rgba(255, 207, 110, .5); border-radius: 8px;
 }
 .fol:hover { border-color: var(--amber); }
+a.fol { text-decoration: none; display: inline-block; }
 #folCount { color: var(--dim); font-size: 12px; margin-bottom: 10px; }
 #folCount b { color: var(--amber); }
 .me { color: var(--dim); font-size: 12px; text-align: center; margin-top: 12px; line-height: 1.7; }
@@ -151,6 +152,15 @@ input[type=text] { margin-top: 12px; }
   color: var(--amber); font-size: 14px; line-height: 1.8;
 }
 #nudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
+/* 装插件的入口。比 #nudge 冷一档:那条是叫人扔瓶(对这片海有用),这条是叫人装东西
+   (对我们有用),所以不许比正事更显眼。只在捞过几瓶之后出现,关掉就永久不再出现。 */
+#extNudge {
+  display: none; margin-top: 16px; padding: 12px 14px;
+  border: 1px solid var(--line); border-radius: 12px;
+  color: var(--dim); font-size: 13px; line-height: 1.75;
+}
+#extNudge b { color: var(--glow); font-weight: 600; }
+#extNudge .row { display: flex; gap: 10px; justify-content: center; margin-top: 10px; }
 #overflow {
   display: none; margin-top: 12px; padding: 10px 14px; font-size: 13px; line-height: 1.7;
   background: rgba(255, 154, 138, .1); border: 1px solid rgba(255, 154, 138, .5);
@@ -193,7 +203,7 @@ input[type=text] { margin-top: 12px; }
 .fb .done { color: var(--dim); font-size: 13px; padding: 9px 0; }
 .vlist { display: flex; flex-direction: column; gap: 12px; }
 .vcard {
-  display: flex; gap: 14px; align-items: center; text-decoration: none;
+  display: block; text-decoration: none;
   background: var(--card); border: 1px solid var(--line);
   border-radius: 12px; padding: 10px; color: var(--ink);
   transition: border-color .15s;
@@ -204,17 +214,34 @@ input[type=text] { margin-top: 12px; }
    另外 img 上的 referrerpolicy="no-referrer" 千万别删 —— hdslb 有 Referer 防盗链,
    带上本站域名一律 403,删了 B站 封面会集体消失 */
 .vcard img {
-  width: 128px; height: 72px; object-fit: cover; border-radius: 8px; flex-shrink: 0;
-  background: var(--mid) no-repeat center/26px
+  display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: 8px;
+  background: var(--mid) no-repeat center/48px
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232f6a92' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M2 9c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3Cpath d='M2 15c2-2 4-2 6 0s4 2 6 0 4-2 6 0'/%3E%3C/svg%3E");
 }
-.vcard .t { font-size: 14px; line-height: 1.6; }
+.vcard .t { font-size: 15px; line-height: 1.6; margin-top: 10px; }
 .pf-b {
   font-size: 11px; padding: 1px 6px; border-radius: 4px; margin-right: 6px;
   background: #133040; color: #6fd5f0; vertical-align: 2px;
 }
-.vcard .u { font-size: 12px; color: var(--dim); margin-top: 4px; }
+/* YouTube 不上底色:红底胶囊在暗色页面上太脏(2026-08-05 BK 反馈),纯色字就够 */
+.pf-y { font-size: 12px; color: #ff8f8f; margin-right: 6px; }
+/* Steam 不上底色,商店同款蓝纯色字(2026-08-10 BK 反馈,同 YouTube 的处理) */
+.pf-s { font-size: 12px; color: #66c0f4; margin-right: 6px; }
+/* 游戏卡片只有「TA 在玩」这一句说明,不带购买/愿望单等任何促销元素 */
+.playing { color: var(--dim); font-size: 12px; }
 #fishEmpty { text-align: center; color: var(--dim); padding: 30px 0; line-height: 2; }
+/* 收藏入口。原来收藏夹只有把整片海捞空才露面(2026-08-12 BK 反馈:想直接打开
+   收藏没地方点),现在捞瓶页常驻这一行。压到跟 #folCount 一档冷:收藏是低频
+   回访,不许跟「下网」抢眼。没收藏过就整个不出现,不占位置 */
+#myLiked { margin-top: 14px; text-align: center; }
+#myLiked:empty { margin: 0; }   /* 没收藏时连这点间距也不留 */
+#myLiked .entry {
+  background: none; border: none; cursor: pointer; font: inherit;
+  color: var(--dim); font-size: 12px; padding: 6px 10px;
+  border-bottom: 1px dashed rgba(255, 207, 110, .35);
+}
+#myLiked .entry:hover { color: var(--amber); }
+#myLiked .box { margin-top: 12px; text-align: left; }
 footer { text-align: center; margin-top: 30px; font-size: 13px; color: var(--dim); line-height: 1.8; }
 footer a { color: var(--glow); text-decoration: none; }
 footer .oss { margin-top: 10px; font-size: 12px; opacity: .75; }
@@ -294,6 +321,8 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <div class="msg" id="msgFish"></div>
     <div id="nudge"></div>
     <div id="fishResult" style="margin-top:16px"></div>
+    <div id="myLiked"></div>
+    <div id="extNudge"></div>
   </div>
 
   <footer>
@@ -335,44 +364,48 @@ var I18N = {
     seaHas: ["海里现在有 ", " 个瓶子"],
     tabThrow: "🍾 扔一个瓶子", tabFish: "🎣 捞一个瓶子",
     h2Throw: "装瓶", h2Fish: "捞瓶",
-    hintThrow: '在视频下面点「分享 → 复制链接」，回来贴到下面。<b style="color:var(--glow)">贴 1 到 5 条就够，一条也算一瓶</b>。YouTube 和 B站 都收，可以混着装。挑「你真的在看」的，别挑装点门面的。',
+    hintThrow: '在视频下面点「分享 → 复制链接」，回来贴到下面。<b style="color:var(--glow)">贴 1 到 5 条就够，一条也算一瓶</b>。YouTube、B站 和 Steam 商店页都收，可以混着装。挑「你真的在看、真的在玩」的，别挑装点门面的。',
     hintFish: "随机捞一个别人扔的瓶子，看看信息茧房外面长什么样。",
     demoNote: "🌊 刚好有一瓶漂到你脚边，先看看别人在看什么",
-    phLinks: "把链接贴在这里，一行一个\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
-    grabPc: "⚡ 电脑玩家进阶：一键抓取最近看的 10 条（手机用不了这招）",
+    phLinks: "把链接贴在这里，一行一个\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx\nhttps://store.steampowered.com/app/xxxx",
+    playing: "TA 在玩",
+    grabPc: "⚡ 电脑玩家进阶：一键抓取最近在看的视频、在玩的游戏（手机用不了这招）",
     grabPc1: "按 <b>Ctrl+Shift+B</b> 调出书签栏（就是地址栏下面那一条）",
     grabPc2: "鼠标<b>按住</b>这个按钮别松手，拖到书签栏上再松开：",
     grabPc3a: "打开 ", grabPc3b: " 或 ", grabPc3c: "，点一下书签栏里的「🍾 装瓶」，这一页就自动填好了",
+    grabPc3s: "你的 Steam 资料页",
     grabMb: "📱 安卓进阶：从 YouTube 或 B站 直接分享过来，不用复制粘贴",
     grabMb1: "用 Chrome 打开本页，菜单里点「添加到主屏幕」",
     grabMb2: "以后在 YouTube 点分享、或在 B站 分享面板点「更多」，选「漂流瓶」，链接自己就进来了",
     grabMb3: "可以连着分享好几条，攒够了一起扔（iPhone 用不了这招，还是复制粘贴）",
-    counter: ["已识别 ", " 个有效视频"],
+    counter: ["已识别 ", " 条有效内容"],
     btnThrow: "扔进海里", btnFish: "下网",
     footer1: "捞到好东西，或者玩出毛病了？", footer2: "来 Discord 说一声：",
     footer3: "这东西不读你的浏览记录，代码都在 ",
     myNameNew: function (n) { return "你在海里的代号是 " + n + "，扔出去的瓶子都挂这个名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
+    nickPeek: "点一下看你的代号", nickHide: "点一下藏起来",
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 个 🌟"; },
     yysGot: function (y) { return "，攒了 <b>" + y + "</b> yys"; },
     fishedOnly: "，已经有人捞到过", drifting: "，还在海上漂",
-    cheer: function (n) { return "🌟 你不在的时候，又有 " + n + " 个人说你的瓶子有意思<br>要不要再扔一瓶"; },
+    cheer: function (n) { return "🌟 你不在的时候，又有 " + n + " 个人收藏了你的瓶子<br>要不要再扔一瓶"; },
     folCount: function (n) { return "⭐ 你记住了 <b>" + n + "</b> 个瓶主，他们扔新瓶你会先捞到"; },
     folAdd: "⭐ 记住这个瓶主", folDone: "✅ 已记住，他扔新瓶你会先捞到",
     sealing: "封瓶中，正在抓取标题…",
     biliFail: "这些 B站 链接找不到对应视频",
     b23Fail: "b23.tv 短链没解析出来，打开它跳转后复制完整地址再贴",
     addrCopied: "✅ 网址已复制",
-    thrown: function (c) { return "🍾 装了 " + c + " 个视频的瓶子已经飘进海里"; },
+    thrown: function (c) { return "🍾 装了 " + c + " 条内容的瓶子已经飘进海里"; },
     throwFail: "扔瓶失败，再试一次", netErr: "网络出错，再试一次",
     fishErr: "捞网断了，再试一次",
     exhausted: "🏆 你把整片海都捞完了。<br>扔一瓶进去，等新瓶漂来。",
     goThrow: "去扔一瓶",
     emptySea: "这片海还没有瓶子。<br>先扔一个，等下一个路过的人。",
     fromWho: "🧭 这瓶来自 ", seedNote: "（站里放的精选瓶）", followedNote: " · 你记住过的瓶主",
-    voteGood: "🌟 有意思", fishAgain: "🎣 再捞一个", shareBtn: "📋 分享这瓶",
-    voteDone: "🌟 已记下",
-    likedTitle: "你说过有意思的这几瓶：",
+    voteGood: "🌟 收藏", fishAgain: "🎣 再捞一个", shareBtn: "📋 分享这瓶",
+    voteDone: "🌟 已收藏",
+    likedEntry: function (n) { return "⭐ 我的收藏（" + n + "）"; },
+    likedHide: "收起收藏",
     shareOk: "✅ 已复制，发到哪都行",
     openIt: "打开看看是什么",
     autofill: function (n) { return "⚡ 已自动装入 " + n + " 个视频，过一眼没问题就扔"; },
@@ -382,10 +415,17 @@ var I18N = {
     },
     nudge: "🍾 你已经捞了 3 瓶别人的，海里还没有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "继续捞",
-    voteHint: "看完了回来说一声有意思，好瓶子会漂给更多人",
-    shareText: function (lines, origin) {
-      return "🍾 捞到一瓶陌生人正在看的片单：\n" + lines
-        + "\n\n这是 BK漂流瓶，大家把自己真实在看的视频扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
+    voteHint: "看完了回来收藏一下，好瓶子会漂给更多人",
+    extNudge: '装了浏览器插件，捞一瓶就是<b>点一下工具栏</b>，不用先开这一页。YouTube 和 B站 的播放页也会多一个「装进瓶子」，看到顺手就攒上。',
+    extGo: "去装一个", extNo: "不用",
+    extWelcome: '插件装好了。往后捞瓶<b>点浏览器右上角的 🌊 就行</b>，不用再开这一页。在 YouTube 和 B站 的播放页，播放器下面会多一个「装进瓶子」，看到想推荐的顺手按一下，攒够了在插件里一次扔出去。',
+    extWelcomeOk: "知道了",
+    shareText: function (lines, origin, kind) {
+      var head = kind === "g" ? "🍾 捞到一瓶陌生人最近在玩的游戏："
+        : kind === "m" ? "🍾 捞到一瓶陌生人在看的视频、在玩的游戏："
+        : "🍾 捞到一瓶陌生人正在看的片单：";
+      return head + "\n" + lines
+        + "\n\n这是 BK漂流瓶，大家把自己真实在看在玩的东西扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
     },
   },
   tw: {
@@ -393,44 +433,48 @@ var I18N = {
     seaHas: ["海裡現在有 ", " 個瓶子"],
     tabThrow: "🍾 扔一個瓶子", tabFish: "🎣 撈一個瓶子",
     h2Throw: "裝瓶", h2Fish: "撈瓶",
-    hintThrow: '在影片下面點「分享 → 複製連結」，回來貼到下面。<b style="color:var(--glow)">貼 1 到 5 條就夠，一條也算一瓶</b>。YouTube 和 B站 都收，可以混著裝。挑「你真的在看」的，別挑裝點門面的。',
+    hintThrow: '在影片下面點「分享 → 複製連結」，回來貼到下面。<b style="color:var(--glow)">貼 1 到 5 條就夠，一條也算一瓶</b>。YouTube、B站 和 Steam 商店頁都收，可以混著裝。挑「你真的在看、真的在玩」的，別挑裝點門面的。',
     hintFish: "隨機撈一個別人扔的瓶子，看看同溫層外面長什麼樣。",
     demoNote: "🌊 剛好有一瓶漂到你腳邊，先看看別人在看什麼",
-    phLinks: "把連結貼在這裡，一行一個\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx",
-    grabPc: "⚡ 電腦玩家進階：一鍵抓取最近看的 10 條（手機用不了這招）",
+    phLinks: "把連結貼在這裡，一行一個\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx\nhttps://store.steampowered.com/app/xxxx",
+    playing: "TA 在玩",
+    grabPc: "⚡ 電腦玩家進階：一鍵抓取最近在看的影片、在玩的遊戲（手機用不了這招）",
     grabPc1: "按 <b>Ctrl+Shift+B</b> 叫出書籤列（就是網址列下面那一條）",
     grabPc2: "滑鼠<b>按住</b>這個按鈕別放，拖到書籤列上再放開：",
     grabPc3a: "打開 ", grabPc3b: " 或 ", grabPc3c: "，點一下書籤列裡的「🍾 裝瓶」，這一頁就自動填好了",
+    grabPc3s: "你的 Steam 個人頁",
     grabMb: "📱 安卓進階：從 YouTube 或 B站 直接分享過來，不用複製貼上",
     grabMb1: "用 Chrome 打開本頁，選單裡點「加到主畫面」",
     grabMb2: "以後在 YouTube 點分享、或在 B站 分享面板點「更多」，選「漂流瓶」，連結自己就進來了",
     grabMb3: "可以連著分享好幾條，攢夠了一起扔（iPhone 用不了這招，還是複製貼上）",
-    counter: ["已辨識 ", " 個有效影片"],
+    counter: ["已辨識 ", " 條有效內容"],
     btnThrow: "扔進海裡", btnFish: "下網",
     footer1: "撈到好東西，或者玩出毛病了？", footer2: "來 Discord 說一聲：",
     footer3: "這東西不讀你的瀏覽記錄，程式碼都在 ",
     myNameNew: function (n) { return "你在海裡的代號是 " + n + "，扔出去的瓶子都掛這個名"; },
     myNameHas: function (n, c) { return "你是 " + n + "，扔了 " + c + " 瓶"; },
+    nickPeek: "點一下看你的代號", nickHide: "點一下藏起來",
     goodGot: function (g) { return "，收到 <b>" + g + "</b> 個 🌟"; },
     yysGot: function (y) { return "，攢了 <b>" + y + "</b> yys"; },
     fishedOnly: "，已經有人撈到過", drifting: "，還在海上漂",
-    cheer: function (n) { return "🌟 你不在的時候，又有 " + n + " 個人說你的瓶子有意思<br>要不要再扔一瓶"; },
+    cheer: function (n) { return "🌟 你不在的時候，又有 " + n + " 個人收藏了你的瓶子<br>要不要再扔一瓶"; },
     folCount: function (n) { return "⭐ 你記住了 <b>" + n + "</b> 個瓶主，他們扔新瓶你會先撈到"; },
     folAdd: "⭐ 記住這個瓶主", folDone: "✅ 已記住，他扔新瓶你會先撈到",
     sealing: "封瓶中，正在抓取標題…",
     biliFail: "這些 B站 連結找不到對應影片",
     b23Fail: "b23.tv 短連結沒解析出來，打開它跳轉後複製完整地址再貼",
     addrCopied: "✅ 網址已複製",
-    thrown: function (c) { return "🍾 裝了 " + c + " 個影片的瓶子已經飄進海裡"; },
+    thrown: function (c) { return "🍾 裝了 " + c + " 條內容的瓶子已經飄進海裡"; },
     throwFail: "扔瓶失敗，再試一次", netErr: "網路出錯，再試一次",
     fishErr: "撈網斷了，再試一次",
     exhausted: "🏆 你把整片海都撈完了。<br>扔一瓶進去，等新瓶漂來。",
     goThrow: "去扔一瓶",
     emptySea: "這片海還沒有瓶子。<br>先扔一個，等下一個路過的人。",
     fromWho: "🧭 這瓶來自 ", seedNote: "（站裡放的精選瓶）", followedNote: " · 你記住過的瓶主",
-    voteGood: "🌟 有意思", fishAgain: "🎣 再撈一個", shareBtn: "📋 分享這瓶",
-    voteDone: "🌟 已記下",
-    likedTitle: "你說過有意思的這幾瓶：",
+    voteGood: "🌟 收藏", fishAgain: "🎣 再撈一個", shareBtn: "📋 分享這瓶",
+    voteDone: "🌟 已收藏",
+    likedEntry: function (n) { return "⭐ 我的收藏（" + n + "）"; },
+    likedHide: "收起收藏",
     shareOk: "✅ 已複製，發到哪都行",
     openIt: "打開看看是什麼",
     autofill: function (n) { return "⚡ 已自動裝入 " + n + " 個影片，過一眼沒問題就扔"; },
@@ -440,10 +484,17 @@ var I18N = {
     },
     nudge: "🍾 你已經撈了 3 瓶別人的，海裡還沒有你的",
     nudgeGo: "去扔一瓶", nudgeLater: "繼續撈",
-    voteHint: "看完了回來說一聲有意思，好瓶子會漂給更多人",
-    shareText: function (lines, origin) {
-      return "🍾 撈到一瓶陌生人正在看的片單：\n" + lines
-        + "\n\n這是 BK漂流瓶，大家把自己真實在看的影片扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
+    voteHint: "看完了回來收藏一下，好瓶子會漂給更多人",
+    extNudge: '裝了瀏覽器擴充功能，撈一瓶就是<b>點一下工具列</b>，不用先開這一頁。YouTube 和 B站 的播放頁也會多一個「裝進瓶子」，看到順手就攢上。',
+    extGo: "去裝一個", extNo: "不用",
+    extWelcome: '擴充功能裝好了。往後撈瓶<b>點瀏覽器右上角的 🌊 就行</b>，不用再開這一頁。在 YouTube 和 B站 的播放頁，播放器下面會多一個「裝進瓶子」，看到想推薦的順手按一下，攢夠了在擴充功能裡一次丟出去。',
+    extWelcomeOk: "知道了",
+    shareText: function (lines, origin, kind) {
+      var head = kind === "g" ? "🍾 撈到一瓶陌生人最近在玩的遊戲："
+        : kind === "m" ? "🍾 撈到一瓶陌生人在看的影片、在玩的遊戲："
+        : "🍾 撈到一瓶陌生人正在看的片單：";
+      return head + "\n" + lines
+        + "\n\n這是 BK漂流瓶，大家把自己真實在看在玩的東西扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
     },
   },
 };
@@ -472,6 +523,8 @@ function applyLang() {
     + '<a href="https://www.youtube.com/feed/history" target="_blank" rel="noopener" style="color:var(--glow)">youtube.com/feed/history</a>'
     + T.grabPc3b
     + '<a href="https://www.bilibili.com/history" target="_blank" rel="noopener" style="color:var(--glow)">bilibili.com/history</a>'
+    + T.grabPc3b
+    + '<a href="https://steamcommunity.com/my" target="_blank" rel="noopener" style="color:var(--glow)">' + T.grabPc3s + "</a>"
     + T.grabPc3c;
   $("grabMbSum").textContent = T.grabMb;
   $("grabMb1").textContent = T.grabMb1;
@@ -496,6 +549,7 @@ function applyLang() {
   refreshStats();
   refreshMine();
   refreshFolCount();
+  drawMyLiked();
   var ta = $("links");
   if (ta.value) ta.dispatchEvent(new Event("input"));
 }
@@ -535,30 +589,46 @@ function switchTab(name) {
   $("panelFish").classList.toggle("on", name === "fish");
 }
 $("tabThrow").onclick = function () { switchTab("throw"); };
-$("tabFish").onclick = function () { switchTab("fish"); };
+// 切到捞瓶面板就直接开捞:切过来的人就是想捞的,中间没有要他决定的事,
+// 不必再点一次「下网」。按钮保留,降级成出错/空海之后的手动重试入口。
+// fishResult 非空(结果、首访演示、捞网动画在场)就不重捞,也挡住连点
+$("tabFish").onclick = function () {
+  switchTab("fish");
+  if (!$("fishResult").innerHTML) doFish(false);
+};
 
 function refreshStats() {
   fetch("/api/stats").then(function (r) { return r.json(); }).then(function (d) {
     $("stats").textContent = d.count;
   }).catch(function () { $("stats").textContent = "?"; });
 }
-// 回执:自己的瓶子被捞到、被点「有意思」,回来就能看见
+// 回执:自己的瓶子被捞到、被点「收藏」,回来就能看见
 function refreshMine() {
   fetch("/api/mine?device=" + encodeURIComponent(device))
     .then(function (r) { return r.json(); })
     .then(function (d) {
       myBottles = d.bottles || 0;
-      var name = "<b>" + nickname(device) + "</b>";
       if (!d.bottles) {
         // 一瓶没扔的人不显示代号:对他没意义,还多一个截图泄露面
         $("myName").innerHTML = "";
         return;
       }
-      var t = T.myNameHas(name, d.bottles);
+      // 代号默认打码,点一下才显示:截图是这个产品的主要传播方式,常驻明文
+      // 等于每张截图都把「谁截的图」和「瓶子署名」绑死。星号定长三颗,
+      // 不按代号长度来,免得长度本身漏信息
+      var t = T.myNameHas('<b id="myNick" style="cursor:pointer">★★★</b>', d.bottles);
       if (d.good) t += T.goodGot(d.good) + T.yysGot(d.yys || d.good * 2);
       else if (d.fished) t += T.fishedOnly;
       else t += T.drifting;
       $("myName").innerHTML = t;
+      var nick = $("myNick");
+      var nickShown = false;
+      nick.title = T.nickPeek;
+      nick.onclick = function () {
+        nickShown = !nickShown;
+        nick.textContent = nickShown ? nickname(device) : "★★★";
+        nick.title = nickShown ? T.nickHide : T.nickPeek;
+      };
 
       var last = localStorage.getItem("yb_lastgood");
       if (last !== null && d.good > parseInt(last, 10)) {
@@ -583,6 +653,11 @@ var BILI_PATTERNS = [
   /bilibili\.com\/video\/(av\d{1,12})/i,
   /b23\.tv\/(BV[A-Za-z0-9]{10})/,
   /b23\.tv\/(av\d{1,12})\b/i
+];
+// Steam 商店页与社区页都认,appid 是纯数字
+var STEAM_PATTERNS = [
+  /store\.steampowered\.com\/app\/(\d{1,7})/,
+  /steamcommunity\.com\/app\/(\d{1,7})/
 ];
 
 // 手机 B站 App 分享出来的是 b23.tv/随机短码,前端跨域读不到重定向,
@@ -616,10 +691,20 @@ function resolveB23Links() {
   });
 }
 function parseIds(text) {
-  var vids = [], lists = [], bilis = [], seen = {};
+  var vids = [], lists = [], bilis = [], steams = [], seen = {};
   text.split(/\s+/).forEach(function (tok) {
     if (!tok) return;
     var i, m = null;
+    for (i = 0; i < STEAM_PATTERNS.length; i++) {
+      m = tok.match(STEAM_PATTERNS[i]);
+      if (m) break;
+      m = null;
+    }
+    if (m) {
+      // seen 键加前缀,免得纯数字 appid 和别的 id 撞车
+      if (!seen["s" + m[1]]) { seen["s" + m[1]] = 1; steams.push(m[1]); }
+      return;
+    }
     for (i = 0; i < BILI_PATTERNS.length; i++) {
       m = tok.match(BILI_PATTERNS[i]);
       if (m) break;
@@ -643,7 +728,7 @@ function parseIds(text) {
     var lm = tok.match(LIST_RE);
     if (lm && !seen[lm[1]]) { seen[lm[1]] = 1; lists.push(lm[1]); }
   });
-  return { vids: vids, lists: lists, bilis: bilis };
+  return { vids: vids, lists: lists, bilis: bilis, steams: steams };
 }
 
 // B站接口整段封禁 Cloudflare 机房 IP,标题只能在扔瓶人自己的浏览器里拿
@@ -683,14 +768,16 @@ var pvTimer = null;
 var pvCache = {};   // id -> {title, author, thumb}
 
 function pvKey(item) {
-  return item.bvid ? "b:" + item.bvid : item.list ? "l:" + item.list : "v:" + item.vid;
+  return item.bvid ? "b:" + item.bvid : item.list ? "l:" + item.list
+    : item.appid ? "s:" + item.appid : "v:" + item.vid;
 }
 
 function currentItems() {
   var ids = parseIds($("links").value);
   return ids.vids.map(function (v) { return { vid: v }; })
     .concat(ids.lists.map(function (x) { return { list: x }; }))
-    .concat(ids.bilis.map(function (x) { return { bvid: x }; }));
+    .concat(ids.bilis.map(function (x) { return { bvid: x }; }))
+    .concat(ids.steams.map(function (x) { return { appid: x }; }));
 }
 
 function renderPreview() {
@@ -701,8 +788,9 @@ function renderPreview() {
   box.innerHTML = items.map(function (it, i) {
     var c = pvCache[pvKey(it)] || {};
     var img = it.vid ? "https://i.ytimg.com/vi/" + it.vid + "/default.jpg" : thumbSmall(c.thumb, 240);
-    var badge = it.bvid ? '<span class="pf-b">B站</span>' : it.list ? "📃 " : "";
-    var title = c.title || (it.bvid || it.list || it.vid);
+    var badge = it.bvid ? '<span class="pf-b">B站</span>'
+      : it.appid ? '<span class="pf-s">Steam</span>' : it.list ? "📃 " : "";
+    var title = c.title || (it.bvid || it.list || it.appid || it.vid);
     return '<div class="pv' + (c.title ? "" : " load") + '">'
       + '<img referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
       + '<div class="t">' + badge + esc(title)
@@ -715,7 +803,7 @@ function dropItem(i) {
   var items = currentItems();
   var gone = items[i];
   if (!gone) return;
-  var id = gone.vid || gone.list || gone.bvid;
+  var id = gone.vid || gone.list || gone.bvid || (gone.appid && "/app/" + gone.appid);
   // 从输入框里删掉含这个 id 的那一行,输入框始终是唯一数据源
   $("links").value = $("links").value.split(/\n/)
     .filter(function (line) { return line.indexOf(id) < 0; }).join("\n");
@@ -724,15 +812,16 @@ function dropItem(i) {
 
 function fetchPreviewMeta() {
   var items = currentItems();
-  var needV = [], needL = [], needB = [];
+  var needV = [], needL = [], needB = [], needS = [];
   items.forEach(function (it) {
     if (pvCache[pvKey(it)]) return;
     if (it.vid) needV.push(it.vid);
     else if (it.list) needL.push(it.list);
     else if (it.bvid) needB.push(it.bvid);
+    else if (it.appid) needS.push(it.appid);
   });
-  if (needV.length || needL.length) {
-    fetch("/api/preview?v=" + needV.join(",") + "&l=" + needL.join(","))
+  if (needV.length || needL.length || needS.length) {
+    fetch("/api/preview?v=" + needV.join(",") + "&l=" + needL.join(",") + "&s=" + needS.join(","))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         (d.items || []).forEach(function (x) {
@@ -750,7 +839,7 @@ function fetchPreviewMeta() {
 
 $("links").addEventListener("input", function () {
   var ids = parseIds($("links").value);
-  var n = ids.vids.length + ids.lists.length + ids.bilis.length;
+  var n = ids.vids.length + ids.lists.length + ids.bilis.length + ids.steams.length;
   $("parsed").textContent = n;
   $("counterWrap").style.display = n ? "block" : "none";
   $("btnThrow").disabled = n === 0 || n > 10;
@@ -770,11 +859,16 @@ $("links").addEventListener("input", function () {
 
 $("btnThrow").onclick = function () {
   var ids = parseIds($("links").value);
-  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length) return;
+  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length && !ids.steams.length) return;
   $("btnThrow").disabled = true;
   var msg = $("msgThrow");
   msg.className = "msg";
   msg.textContent = T.sealing;
+  // Steam 标题服务端会自己取,预览缓存里有就一起带上当回落
+  var steams = ids.steams.map(function (s) {
+    var c = pvCache["s:" + s] || {};
+    return { id: s, title: c.title || "", thumb: c.thumb || "" };
+  });
   Promise.all(ids.bilis.map(function (b) {
     var c = pvCache["b:" + b];
     return c && c.title
@@ -782,7 +876,7 @@ $("btnThrow").onclick = function () {
       : biliJsonp(b);
   })).then(function (bmetas) {
     var bilis = bmetas.filter(Boolean);
-    if (!ids.vids.length && !ids.lists.length && !bilis.length) {
+    if (!ids.vids.length && !ids.lists.length && !bilis.length && !steams.length) {
       msg.className = "msg err";
       msg.textContent = T.biliFail;
       $("btnThrow").disabled = false;
@@ -791,7 +885,7 @@ $("btnThrow").onclick = function () {
     return fetch("/api/throw", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ device: device, videos: ids.vids, lists: ids.lists, bilis: bilis })
+      body: JSON.stringify({ device: device, videos: ids.vids, lists: ids.lists, bilis: bilis, steams: steams })
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (d.ok) {
         msg.className = "msg ok";
@@ -834,6 +928,42 @@ function maybeNudge() {
   n.style.display = "block";
 }
 
+// 装插件的入口。放在这里而不是首页顶上:先让人捞几瓶尝到味道,再说装东西的事。
+// 三个不显示的情况,缺一个都变成打扰:已经装了(bridge.js 打的标记)、手机(插件装不了)、
+// 不是 Chromium 内核(商店进不去)。关掉一次就永久不再提。
+function hideExtNudge() {
+  $("extNudge").style.display = "none";
+  localStorage.setItem("yb_extnudged", "1");
+}
+
+function canInstallExt() {
+  var ua = navigator.userAgent || "";
+  if (document.documentElement.getAttribute("data-yb-ext")) return false;
+  if (/Mobile|Android|iPhone|iPad|iPod/i.test(ua)) return false;
+  if (/Firefox\/|FxiOS|OPR\/|SamsungBrowser/i.test(ua)) return false;
+  return /Chrome\/\d/.test(ua) && !/Edg(A|iOS)\//i.test(ua);
+}
+
+function maybeExtNudge() {
+  // 3 是扔瓶提示的位置,让它先说完,这条排在后面
+  if (fishCount < 4 || localStorage.getItem("yb_extnudged") || !canInstallExt()) return;
+  var n = $("extNudge");
+  if (n.style.display === "block") return;
+  n.innerHTML = T.extNudge
+    + '<div class="row">'
+    + '<a class="fol" target="_blank" rel="noopener" id="extGo" href="'
+    + EXT_STORE + '">' + T.extGo + "</a>"
+    + '<button class="fol" onclick="hideExtNudge()">' + T.extNo + "</button>"
+    + "</div>";
+  // 点了就不再提:装没装成功这边看不到,但至少他见过了,再弹一次只会烦人
+  $("extGo").onclick = hideExtNudge;
+  n.style.display = "block";
+}
+
+// utm 是给商店后台的流量来源报表用的,好让「网页导过去多少人」能跟别的渠道分开算
+var EXT_STORE = "https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk"
+  + "?utm_source=bkbottle-web&utm_medium=fish";
+
 // isStandalone 只用于捞瓶上报里的 pwa 字段(已装用户统计),装桌面提示已整体下线
 var isStandalone = false;
 try {
@@ -848,7 +978,10 @@ try { liked = JSON.parse(localStorage.getItem("yb_liked") || "[]"); } catch (e) 
 function shareBottle() {
   if (!lastBottle) return;
   var lines = lastBottle.map(function (v) { return "· " + (v.title || "").slice(0, 42); });
-  var text = T.shareText(lines.join("\n"), location.origin);
+  var hasGame = lastBottle.some(function (v) { return v.appid; });
+  var hasVideo = lastBottle.some(function (v) { return !v.appid; });
+  var kind = hasGame && hasVideo ? "m" : hasGame ? "g" : "v";
+  var text = T.shareText(lines.join("\n"), location.origin, kind);
   function done() {
     var b = document.getElementById("shareBtn");
     if (b) b.textContent = T.shareOk;
@@ -916,13 +1049,13 @@ function vote(bottleId, verdict) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ bottle: bottleId, verdict: verdict, device: device })
   }).catch(function () {});
-  // 只换掉「有意思」自己,「再捞一个」和「分享」得留着,否则点完评价就没有出口了
+  // 只换掉「收藏」自己,「再捞一个」和「分享」得留着,否则点完评价就没有出口了
   var btn = $("goodBtn");
   if (btn) btn.outerHTML = '<span class="done">' + T.voteDone + "</span>";
   rememberLiked();
 }
 
-// 捞空整片海之后总得有地方可去,把他自己说过有意思的瓶子留在本地当收藏夹。
+// 捞空整片海之后总得有地方可去,把他自己收藏过的瓶子留在本地当收藏夹。
 // 只存前端,不占 KV,服务端也就不需要一张「谁喜欢过什么」的反查表
 function rememberLiked() {
   if (!lastBottle) return;
@@ -930,21 +1063,33 @@ function rememberLiked() {
   liked.push({ by: lastBy || "", v: lastBottle, n: lastBottle.length });
   if (liked.length > 20) liked = liked.slice(-20);
   try { localStorage.setItem("yb_liked", JSON.stringify(liked)); } catch (e) {}
+  drawMyLiked();   // 刚收的这瓶要立刻算进入口那个数字里
 }
 
-// 海捞空了不能是死胡同。倒序显示最近说过有意思的几瓶,让他还有东西可看
-function likedHtml() {
-  if (!liked.length) return "";
-  var html = '<div class="by" style="margin-top:22px">' + T.likedTitle + "</div>"
-    + '<div class="vlist">';
-  liked.slice().reverse().slice(0, 5).forEach(function (x) {
+// 收藏入口:捞瓶页常驻的那一行。收藏本来只有捞空整片海才看得见,
+// 等于收了也找不回来。展开给全部 20 瓶(存量上限就是 20),不再截到 5 条
+var likedOpen = false;
+function toggleLiked() { likedOpen = !likedOpen; drawMyLiked(); }
+function drawMyLiked() {
+  var el = $("myLiked");
+  if (!el) return;
+  if (!liked.length) { el.innerHTML = ""; return; }   // 没收藏过就不占位置
+  el.innerHTML = '<button class="entry" onclick="toggleLiked()">'
+    + (likedOpen ? T.likedHide : T.likedEntry(liked.length)) + "</button>"
+    + (likedOpen ? '<div class="box">' + likedCards(20) + "</div>" : "");
+}
+
+// 收藏的卡片列表。倒序 —— 最近收的排最上面
+function likedCards(limit) {
+  var html = '<div class="vlist">';
+  liked.slice().reverse().slice(0, limit).forEach(function (x) {
     (x.v || []).forEach(function (v) { html += videoCardHtml(v); });
   });
   return html + "</div>";
 }
 
-// B站 的图 CDN 认 @ 后缀缩放。卡片最宽 148px,原图动辄 1500px 宽,一瓶五张就是
-// 好几兆,手机流量上尤其疼。默认 480w 够 2x 屏用,装瓶预览那排小图给 240w
+// B站 的图 CDN 认 @ 后缀缩放。原图动辄 1500px 宽,一瓶五张就是好几兆,
+// 手机流量上尤其疼。通栏大封面给 800w,装瓶预览那排小图给 240w
 function thumbSmall(t, w) {
   if (!t) return "";
   w = w || 480;
@@ -955,22 +1100,30 @@ function thumbSmall(t, w) {
 
 function videoCardHtml(v) {
   var url, img, badge = "";
-  if (v.bvid) {
+  if (v.appid) {
+    // 游戏卡片:封面+名字+「TA 在玩」,点开跳 Steam 商店页。不带购买/愿望单按钮,
+    // 不带促销字样 —— 卡片一旦看起来像导流位,这个产品就没人信了
+    url = "https://store.steampowered.com/app/" + v.appid + "/";
+    img = v.thumb || "";
+    badge = '<span class="pf-s">Steam</span><span class="playing">' + T.playing + " · </span>";
+  } else if (v.bvid) {
     url = "https://www.bilibili.com/video/" + v.bvid;
-    img = thumbSmall(v.thumb);
+    img = thumbSmall(v.thumb, 800);
     badge = '<span class="pf-b">B站</span>';
   } else if (v.list) {
     url = "https://www.youtube.com/playlist?list=" + v.list;
     img = v.thumb || "";
-    badge = "📃 ";
+    badge = '<span class="pf-y">YouTube</span>📃 ';
   } else {
     url = "https://www.youtube.com/watch?v=" + v.vid;
-    img = "https://i.ytimg.com/vi/" + v.vid + "/mqdefault.jpg";
+    // hqdefault 是 4:3 上下带黑边,卡片 16:9 + object-fit:cover 正好把黑边裁掉;
+    // 别换 maxresdefault,老视频没有这档,会 404 成灰图
+    img = "https://i.ytimg.com/vi/" + v.vid + "/hqdefault.jpg";
+    badge = '<span class="pf-y">YouTube</span>';
   }
   return '<a class="vcard" href="' + url + '" target="_blank" rel="noopener">'
     + '<img loading="lazy" referrerpolicy="no-referrer" src="' + esc(img) + '" alt="">'
-    + '<div><div class="t">' + badge + esc(v.title || T.openIt) + "</div>"
-    + '<div class="u">' + url + "</div></div></a>";
+    + '<div class="t">' + badge + esc(v.title || T.openIt) + "</div></a>";
 }
 
 function esc(s) {
@@ -979,16 +1132,30 @@ function esc(s) {
   });
 }
 
-// YouTube 和 B站 的历史页都要认,两边的 id 分别塞进 hash
-var BM_SRC = "(function(){var seen={},yt=[],bv=[];"
+// YouTube/B站 的历史页和 Steam 都要认,id 分别塞进 hash。
+// Steam 必须收紧到两条窄路(2026-08-11 BK 踩坑:在商店首页点书签,抓走的全是推荐位,
+// 装进瓶子的是 Steam 算法的原样输出,不是他玩过的游戏):
+// 资料页只抓「最近活动」区块(.recent_games 里的才是真实玩过的);
+// 单个游戏的商店页只装当前这一个;其他 Steam 页面直接拒绝
+var BM_SRC = "(function(){var seen={},yt=[],bv=[],sa=[],h=location.hostname;"
+  + "if(h==='steamcommunity.com'){"
+  + "document.querySelectorAll('.recent_games a[href]').forEach(function(a){"
+  + "var s=a.href.match(/\\/app\\/(\\d{1,7})/);"
+  + "if(s&&!seen['s'+s[1]]){seen['s'+s[1]]=1;sa.push(s[1])}});"
+  + "if(!sa.length){alert('这里没有「最近活动」的游戏。打开你自己的 Steam 资料页再点');return}"
+  + "}else if(h==='store.steampowered.com'){"
+  + "var sm=location.pathname.match(/^\\/app\\/(\\d{1,7})/);"
+  + "if(sm){sa.push(sm[1])}else{alert('打开某个游戏自己的商店页再点，一次装这一个游戏');return}"
+  + "}else{"
   + "document.querySelectorAll('a[href]').forEach(function(a){"
   + "var m=a.href.match(/[?&]v=([A-Za-z0-9_-]{11})/)||a.href.match(/\\/shorts\\/([A-Za-z0-9_-]{11})/);"
   + "if(m){if(!seen[m[1]]){seen[m[1]]=1;yt.push(m[1])}return}"
   + "var b=a.href.match(/bilibili\\.com\\/video\\/(BV[A-Za-z0-9]{10})/);"
   + "if(b&&!seen[b[1]]){seen[b[1]]=1;bv.push(b[1])}});"
-  + "yt=yt.slice(0,10);bv=bv.slice(0,10);"
-  + "if(!yt.length&&!bv.length){alert('这一页没找到视频，先打开 YouTube 或 B站 的历史页再点');return}"
-  + "var q=[];if(yt.length)q.push('vids='+yt.join(','));if(bv.length)q.push('bvs='+bv.join(','));"
+  + "}"
+  + "yt=yt.slice(0,10);bv=bv.slice(0,10);sa=sa.slice(0,10);"
+  + "if(!yt.length&&!bv.length&&!sa.length){alert('这一页没找到视频。打开 YouTube/B站 的历史页、你的 Steam 资料页或某个游戏的商店页再点');return}"
+  + "var q=[];if(yt.length)q.push('vids='+yt.join(','));if(bv.length)q.push('bvs='+bv.join(','));if(sa.length)q.push('apps='+sa.join(','));"
   + "window.open('" + location.origin + "/#'+q.join('&'))})()";
 // 语言切换会重建这个链接元素,所以每次都要重新挂
 function bindBookmarklet() {
@@ -1020,13 +1187,14 @@ function bindBookmarklet() {
       shorts.push("https://b23.tv/" + sm[1]);
     }
   }
-  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length && !shorts.length) return;
+  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length && !ids.steams.length && !shorts.length) return;
   history.replaceState(null, "", location.pathname);
   switchTab("throw");
   var ta = $("links");
   var lines = ids.vids.map(function (v) { return "https://www.youtube.com/watch?v=" + v; })
     .concat(ids.lists.map(function (x) { return "https://www.youtube.com/playlist?list=" + x; }))
     .concat(ids.bilis.map(function (b) { return "https://www.bilibili.com/video/" + b; }))
+    .concat(ids.steams.map(function (s) { return "https://store.steampowered.com/app/" + s; }))
     .concat(shorts);
   ta.value = (ta.value ? ta.value.replace(/\s*$/, "\n") : "") + lines.join("\n");
   ta.dispatchEvent(new Event("input"));
@@ -1038,7 +1206,8 @@ function bindBookmarklet() {
 (function autofillFromHash() {
   var my = location.hash.match(/vids=([A-Za-z0-9_,-]+)/);
   var mb = location.hash.match(/bvs=([A-Za-z0-9,]+)/);
-  if (!my && !mb) return;
+  var ms = location.hash.match(/apps=([\d,]+)/);
+  if (!my && !mb && !ms) return;
   var lines = [];
   if (my) {
     my[1].split(",").filter(function (v) { return /^[A-Za-z0-9_-]{11}$/.test(v); })
@@ -1047,6 +1216,10 @@ function bindBookmarklet() {
   if (mb) {
     mb[1].split(",").filter(function (v) { return /^BV[A-Za-z0-9]{10}$/.test(v); })
       .slice(0, 10).forEach(function (v) { lines.push("https://www.bilibili.com/video/" + v); });
+  }
+  if (ms) {
+    ms[1].split(",").filter(function (v) { return /^\d{1,7}$/.test(v); })
+      .slice(0, 10).forEach(function (v) { lines.push("https://store.steampowered.com/app/" + v); });
   }
   if (!lines.length) return;
   lines = lines.slice(0, 10);
@@ -1076,9 +1249,9 @@ function doFish(isDemo) {
       if (d.empty) {
         if (isDemo) { box.innerHTML = ""; return; }   // 演示捞不到就装没这回事
         if (d.exhausted) {
+          // 这里不再铺一份收藏 —— 下面那个常驻入口已经有了,铺两遍是同一批卡片
           box.innerHTML = '<div id="fishEmpty">' + T.exhausted + '</div>'
-            + '<button class="big" onclick="switchTab(\'throw\')">' + T.goThrow + '</button>'
-            + likedHtml();
+            + '<button class="big" onclick="switchTab(\'throw\')">' + T.goThrow + '</button>';
         } else {
           box.innerHTML = '<div id="fishEmpty">' + T.emptySea + '</div>';
         }
@@ -1117,6 +1290,7 @@ function doFish(isDemo) {
       box.innerHTML = html;
       if (!isDemo) {   // 演示不算捞瓶次数,也不触发扔瓶提示
         maybeNudge();
+        maybeExtNudge();   // 必须在 maybeNudge 之后:捞瓶计数在那里面加
       }
     })
     .catch(function () {
@@ -1144,6 +1318,22 @@ if (location.hash === "#throw") {
   switchTab("throw");
   setTimeout(function () { var t = $("links"); if (t) t.focus(); }, 300);
 }
+
+// 装完插件浏览器自动开的这一页(见 extension/sw.js 的 onInstalled)。
+// 这批人最容易装完就忘,所以把「怎么用」直接摆在最上面。顺带:bridge.js 会在
+// 这一趟把网页的 device 抄给插件,不来这一趟插件就一直是「还没有身份」的状态。
+// 复用 extNudge 那块位置 —— 已经装了的人不会看到劝装提示,不冲突。
+(function extWelcome() {
+  try {
+    if (new URLSearchParams(location.search).get("from") !== "ext-install") return;
+  } catch (e) { return; }
+  var n = $("extNudge");
+  if (!n) return;
+  n.innerHTML = T.extWelcome
+    + '<div class="row"><button class="fol" onclick="hideExtNudge()">'
+    + T.extWelcomeOk + "</button></div>";
+  n.style.display = "block";
+})();
 
 // 首访自动捞一网演示:新人 3 秒看懂这是什么。只演一次,不计任何统计;
 // 带分享/书签参数进来的人有明确目的,不打断

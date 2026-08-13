@@ -4,7 +4,8 @@
 
 不用注册，不读你的浏览记录，没有算法推荐。
 
-**线上：https://yt-bottle.bkingfilm.workers.dev**
+**线上：https://b.bking.film**
+**Chrome 插件：[Chrome 应用商店](https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk)**（点工具栏就是一次捞瓶，不用先打开网页）
 
 支持 YouTube（视频和播放列表）和 B站，一个瓶子里可以混着装。
 
@@ -25,7 +26,9 @@
 
 ## Chrome 插件
 
-`extension/` 里是插件版：点工具栏那个瓶子就是一次捞瓶，YouTube 和 B站 的播放页多一个「装进瓶子」。
+**装：[Chrome 应用商店](https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk)**
+
+`extension/` 里是插件版：点工具栏那个瓶子就是一次捞瓶，YouTube 和 B站 的播放页多一个「装进瓶子」。界面文案在 `extension/_locales/`，目前有简体中文和英文两份。
 
 权限只要 `storage` 加三个域名，没有 `history`、没有 `tabs`、没有 `<all_urls>` —— 上面那条「不读你的浏览记录」在插件里也算数，虽然插件确实有这个 API。
 

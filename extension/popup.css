@@ -9,14 +9,33 @@ body.popup {
   padding: 13px;
 }
 
-/* popup 里空间紧,缩略图和留白都收一档 */
+/* popup 里空间紧,留白收一档。封面不收 —— 大封面正是这版改动的目的 */
 body.popup .vcard { padding: 6px; }
-body.popup .vcard img { width: 72px; height: 40px; }
+body.popup .vcard.mini img { width: 72px; height: 40px; }
 body.popup .vcard .t { font-size: 12.5px; }
 body.popup .group { padding: 11px; }
 body.popup .receipt { padding: 7px 11px; font-size: 12px; }
 body.popup .wave { padding: 22px 0; font-size: 24px; }
-body.popup .vlist.cap { max-height: 232px; }
+/* 一张大卡约 226px 高:这个数让第一张全显、第二张露出一条头,人一眼知道下面还有。
+   272 是量出来的 —— 最坏场景(有回执条 + 多视频)整块刚好压进 600 不出全局滚动条 */
+body.popup .vlist.cap { max-height: 272px; }
+
+/* 评分引导:默认不存在,捞够几次才由 panel.js 插进来。做得比回执还轻 ——
+   它对用户没有任何好处,只对商店排名有好处,所以不许抢走「再捞一个」的注意力,
+   也不许重复出现:点过任意一个按钮就永久不再显示。 */
+.rate {
+  display: none; margin-top: 10px; padding: 9px 12px;
+  border: 1px solid var(--line); border-radius: 10px;
+  font-size: 12px; line-height: 1.7; color: var(--dim);
+}
+.rate.on { display: flex; align-items: center; gap: 8px; }
+.rate span { flex: 1; }
+.rate button {
+  background: none; border: 1px solid var(--line); border-radius: 7px;
+  color: var(--dim); font-size: 12px; padding: 3px 9px; cursor: pointer;
+}
+.rate button.go { color: var(--amber); border-color: rgba(255, 207, 110, .5); }
+.rate button:hover { border-color: var(--glow); }
 
 /* 滚动条别太抢眼 */
 body.popup::-webkit-scrollbar { width: 8px; }

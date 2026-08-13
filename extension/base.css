@@ -43,7 +43,7 @@ body {
 .who { color: var(--dim); font-size: 12px; }
 .who b { color: var(--amber); }
 
-/* 回执:自己的瓶子被人说有意思 */
+/* 回执:自己的瓶子被人收藏 */
 .receipt {
   display: none;
   margin-bottom: 10px;
@@ -63,12 +63,14 @@ body {
 .by { color: var(--dim); font-size: 12.5px; margin-bottom: 10px; }
 .by b { color: var(--amber); }
 
-/* 视频卡片 */
+/* 视频卡片:大封面在上、标题在下。封面才是视频的第一信息,72px 小图只能看个色块
+   (2026-08-04 BK 反馈),所以让它占满卡宽。多视频的瓶靠 .cap 滚动。 */
 .vlist { display: flex; flex-direction: column; gap: 8px; }
 
 .vcard {
   display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   padding: 8px;
   background: var(--card);
   border: 1px solid var(--line);
@@ -82,10 +84,12 @@ body {
 
 /* 底图画两道浪当占位:B站 封面走海外线路要一两秒,原来那块纯色看着像加载失败。
    img 上的 referrerpolicy="no-referrer" 千万别删 —— hdslb 有 Referer 防盗链,
-   带上域名一律 403,删了 B站 封面会集体消失(见 panel.js 的 cardHtml) */
+   带上域名一律 403,删了 B站 封面会集体消失(见 panel.js 的 cardHtml)。
+   aspect-ratio 16/9 + cover 还兼职裁黑边:YT 的 hqdefault 是 4:3,上下各 12.5%
+   是黑条,cover 正好把它们裁干净 */
 .vcard img {
-  width: 96px;
-  height: 55px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
   flex: none;
   object-fit: cover;
   border-radius: 7px;
@@ -114,6 +118,10 @@ body {
   margin-right: 4px;
   vertical-align: 1px;
 }
+/* YouTube 不上底色:红底胶囊在暗色面板上太脏(2026-08-05 BK 反馈),纯色字就够 */
+.pf-y { color: #ff8f8f; font-size: 10px; margin-right: 4px; }
+/* Steam 同样不上底色,商店同款蓝(2026-08-10 BK 反馈) */
+.pf-s { color: #66c0f4; font-size: 10px; margin-right: 4px; }
 
 /* 按钮 */
 .row { display: flex; gap: 8px; }
@@ -147,7 +155,7 @@ button {
 
 .ghost:hover { border-color: var(--glow); }
 
-/* 「有意思」那一格。空着的时候(捞空了)不占宽,让「再捞一个」自己撑满 */
+/* 「收藏」那一格。空着的时候(捞空了)不占宽,让「再捞一个」自己撑满 */
 .half { flex: 1; display: flex; }
 .half:empty { display: none; }
 .half > button { flex: 1; }
@@ -230,6 +238,11 @@ button {
 .sec.fold.open { margin-bottom: 9px; }
 
 #pending.hide { display: none; }
+/* 收藏组:形态照搬「待扔的瓶子」,同样是折叠头 + 列表,用户不用再学一套。
+   收藏本来只有把整片海捞空才露面(2026-08-12 BK 反馈:想直接打开收藏没地方点),
+   现在常驻面板底部;一瓶没收藏就整组不存在,不占那 600px 里的任何高度 */
+#likedBox.hide { display: none; }
+#lgroup.empty { display: none; }
 /* 收起时列表的 margin 一起没了,按钮会贴上标题行 */
 #pending.hide + .row { margin-top: 10px; }
 
@@ -274,18 +287,21 @@ button {
 .vlist.cap { max-height: 268px; overflow-y: auto; padding-right: 2px; }
 .plist.cap { max-height: 140px; overflow-y: auto; }
 
-/* 底栏:设置/版本/链接,跟常见插件面板的位置习惯一致 */
+/* 底栏:设置/版本/链接,跟常见插件面板的位置习惯一致。
+   两句话左侧聚拢隔一小段(2026-08-11 BK 反馈,space-between 会把它们拉到两端),
+   只有版本号靠右 */
 .foot {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  gap: 6px;
   margin-top: 12px;
   padding-top: 10px;
   border-top: 1px solid var(--line);
   color: var(--dim);
   font-size: 11.5px;
 }
+
+.foot #ver { margin-left: auto; }
 
 .foot a { color: var(--dim); text-decoration: none; }
 .foot a:hover { color: var(--glow); }

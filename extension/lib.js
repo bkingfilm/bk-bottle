@@ -2,6 +2,10 @@
 // 扔瓶一律交给网页完成(见 throwPending),这样瓶主身份只有一个,回执才对得上。
 var API = "https://b.bking.film";
 
+// 商店页,只用来开评分。id 写死是因为插件在自己的商店条目里跑,
+// chrome.runtime.id 在本地加载(未打包)时是另一串,拿它拼会开到不存在的页面
+var STORE_URL = "https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk";
+
 // 网页那边 localStorage 用 yb_ 前缀,插件这边 chrome.storage.local 用同名 key,
 // bridge.js 负责在 b.bking.film 页面上把两边对起来
 function load(keys) {
@@ -18,24 +22,28 @@ function esc(s) {
   });
 }
 
-// 待扔清单的条目统一成 {vid|bvid, title},和网页的视频对象保持同一形状
+// 待扔清单的条目统一成 {vid|bvid|appid, title},和网页的对象保持同一形状
 function itemUrl(v) {
+  if (v.appid) return "https://store.steampowered.com/app/" + v.appid + "/";
   if (v.bvid) return "https://www.bilibili.com/video/" + v.bvid;
   if (v.list) return "https://www.youtube.com/playlist?list=" + v.list;
   return "https://www.youtube.com/watch?v=" + v.vid;
 }
 
 function itemThumb(v) {
-  if (v.vid) return "https://i.ytimg.com/vi/" + v.vid + "/mqdefault.jpg";
+  // hqdefault(480x360)而不是 mqdefault(320x180):封面现在全宽显示,320 会糊。
+  // 它是 4:3 带上下黑条,CSS 那边 16:9 容器 + cover 正好裁掉(见 base.css .vcard img)。
+  // maxresdefault 更清楚但老视频经常 404,hqdefault 是所有视频都保底有的最高档
+  if (v.vid) return "https://i.ytimg.com/vi/" + v.vid + "/hqdefault.jpg";
   var t = v.thumb || "";
-  // B站 的图 CDN 支持 @ 后缀缩放。卡片最宽也就 132px,原图动辄 1500px 宽,
+  // B站 的图 CDN 支持 @ 后缀缩放。卡片全宽也就 350px 上下,原图动辄 1500px 宽,
   // 一瓶五张就是好几兆,popup 打开会明显卡一下。480w 够 2x 屏用
   if (/\.(hdslb|biliimg)\.com\//.test(t)) t = t.split("@")[0] + "@480w_270h";
   return t;
 }
 
 function itemKey(v) {
-  return v.bvid || v.list || v.vid || "";
+  return v.appid || v.bvid || v.list || v.vid || "";
 }
 
 // 攒够了就把清单交给网页装填。网页认 #vids= 和 #bvs= 这两个 hash 参数
