@@ -2,13 +2,14 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>商店截图 1280x800</title>
+<title>商店截图·Steam 版 1280x800</title>
 <link rel="stylesheet" href="../extension/base.css">
 <link rel="stylesheet" href="../extension/popup.css">
 <style>
-  /* 商店截图专用画布:1280x800 是 Edge / Chrome 商店的标准尺寸。
-     把真实的 popup 面板摆在中间,左边写一句它是干什么的。
-     不进发布包(在 dev/ 下)。 */
+  /* Steam 功能宣传图:1280x800,商店截图同规格,也可直接发社交平台。
+     用 headless 截图生成:
+     chrome --headless=new --screenshot=shot-steam.png --window-size=1280,800 file:///.../dev/shot-steam.html
+     版式与 shot.html 一致,只换文案与瓶内容。不进发布包(在 dev/ 下)。 */
   html, body { margin: 0; padding: 0; }
   html {
     width: 1280px; height: 800px; overflow: hidden;
@@ -16,8 +17,6 @@
     display: flex; align-items: center; justify-content: center; gap: 56px;
     font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
   }
-  /* 字号 2026-08-06 整体上调一档:商店列表页把 1280x800 缩到三四百宽显示,
-     原来的 34/16.5/15 缩完基本读不出来,左栏是唯一能在缩略状态下传达信息的地方 */
   .pitch { width: 540px; color: #e8f2fa; }
   .pitch h1 { font-size: 46px; line-height: 1.3; margin: 0 0 20px; letter-spacing: .5px; }
   .pitch h1 b { color: #4dd0e1; }
@@ -34,17 +33,12 @@
     font-family: ui-monospace, Consolas, monospace; font-size: 19px; letter-spacing: 1px;
     color: #4dd0e1; background: #0d2c46; border: 1px solid #1e4a6d; border-radius: 999px;
   }
-  /* 面板本体:尺寸和真实 popup 完全一致,外面加一点阴影好和背景分开。
-     zoom 1.15 只为截图放大(zoom 会一起放大布局,scale 不会),面板内比例不变 */
   body.popup {
     max-height: none; overflow: visible;
     zoom: 1.15;
     border: 1px solid #1e4a6d; border-radius: 14px;
     box-shadow: 0 26px 70px rgba(0, 0, 0, .55);
   }
-  /* 只在截图里放宽这一格:真实 popup 的 272px 让第二张只露一条七八像素的边,
-     缩到商店列表尺寸就成了一道噪点带。放到 322 露出第二张封面的一角,
-     「一瓶能装好几条」这件事才看得出来。插件本身不动这个数。 */
   body.popup .vlist.cap { max-height: 322px; }
 </style>
 </head>
@@ -74,7 +68,7 @@
 </div>
 <div class="foot">
   <span>不读你的浏览记录 · <a href="https://github.com/bkingfilm/bk-bottle">源码</a></span>
-  <span>v0.1.4</span>
+  <span id="ver">v0.1.8</span>
 </div>
 
 <script>
@@ -82,30 +76,27 @@
 var pitch = document.createElement("div");
 pitch.className = "pitch";
 pitch.innerHTML =
-  "<h1>捞一个陌生人<br><b>正在看的视频</b></h1>"
-  + "<p>算法喂给你的东西越来越像你已经点过的。<br>这是一条手工的出路。</p>"
-  + "<ul><li>点一下就捞，不用注册</li>"
-  + "<li>不读你的浏览记录</li>"
-  + "<li>不碰你的新标签页</li>"
-  + "<li>YouTube 和 B站 都能装进瓶子</li></ul>"
+  "<h1>现在也能扔<br><b>Steam 里的游戏</b>了</h1>"
+  + "<p>不光是视频。把你真的在玩的游戏装进瓶子，<br>捞一瓶陌生人的试试。</p>"
+  + "<ul><li>Steam 商店页一键「装进瓶子」</li>"
+  + "<li>自己的资料页一键装入「最近在玩」</li>"
+  + "<li>游戏和视频可以混着装一瓶</li>"
+  + "<li>不读浏览记录，不用注册</li></ul>"
   + '<span class="addr">b.bking.film</span>';
 document.documentElement.insertBefore(pitch, document.body);
 
-// 假数据:截图要的是版式,不去打真实接口。
-// 2026-08-06 换掉原来那组:小图时代 id 和标题对不上没人看得出来,改大封面之后
-// 第一条的封面是 Rick Astley、标题却写着鬼谷说,一眼假。现在三条都是海里真实
-// 捞到过的瓶,id 与标题一一对得上(标题本来就是服务端从 oEmbed 取回来的)。
+// 假数据:截图要的是版式,不去打真实接口。封面用 Steam 官方 header,
+// 第一张全露(影之刃零,08-12 BK 指定),第二张只露上沿示意一瓶不止一条
 var FAKE = {
   id: "b:shot", by: "灯塔 657",
   videos: [
-    { vid: "Q7Fp7CCi8Ck", title: "Why Does Every Call of Duty Keep Getting Faster?" },
-    // 第二条只露出封面上沿,挑风景不挑人脸:裁在眉毛上的半张脸比裁一半的河滩难看得多
+    { appid: "4115450", title: "影之刃零",
+      thumb: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4115450/40b2044606b59e0cdd9fb89738895fea8a22067c/header_schinese.jpg?t=1786515952" },
+    { appid: "206440", title: "To the Moon《去月球》",
+      thumb: "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/206440/header.jpg?t=1780927584" },
     { bvid: "BV1MBKN65E5G",
       title: "为什么我要万里迢迢，记录黄河边的村庄？",
       thumb: "https://i2.hdslb.com/bfs/archive/02da0497ba0dfb06dd0e57d3dd99cf9ade3099a9.jpg" },
-    { bvid: "BV1kz421b7Ec",
-      title: "河洛工作室 徐昌隆 金庸群侠传之后的30年 钱从哪来系列",
-      thumb: "https://i2.hdslb.com/bfs/archive/4c9f241a7932b149f79e611316abdc9c92489726.jpg" },
   ],
 };
 window.chrome = {
@@ -114,7 +105,23 @@ window.chrome = {
              onChanged: { addListener: function () {} } },
   action: { setBadgeText: function () {}, setBadgeBackgroundColor: function () {} },
   tabs: { create: function () {} },
-  runtime: { onInstalled: { addListener: function () {} }, onStartup: { addListener: function () {} } },
+  runtime: { onInstalled: { addListener: function () {} }, onStartup: { addListener: function () {} },
+             getManifest: function () { return { version: "0.1.8" }; } },
+  i18n: { getMessage: function (k, a) {
+    var zh = {
+      brand: "🌊 BK漂流瓶", btnAgain: "🎣 再捞一个", btnGood: "🌟 收藏",
+      goodDone: "🌟 已收藏", pendingTitle: "🍾 待扔的瓶子",
+      pendingEmpty: "在 YouTube、B站 或 Steam 点「装进瓶子」可以攒着一起扔",
+      btnThrow: "扔进海里", btnThrowEmpty: "🍾 去网页扔一瓶",
+      fromWho: "🧭 这瓶来自", followedMark: " · 你记住过的瓶主",
+      likedTitle: "你收藏的这几瓶：", openIt: "打开看看是什么",
+      notBound: "未连接身份", whoIs: "你是", whoMasked: "你是 <b>★★★</b>",
+      whoShow: "点一下看你的代号", whoHide: "点一下隐藏代号",
+      footNoHistory: "不读你的浏览记录", footStar: "来 GitHub 点个", removeTip: "拿出来",
+      rateAsk: "用着还行的话，去商店写一句", rateGo: "去评分", rateLater: "以后再说",
+    };
+    return zh[k] || "";
+  } },
 };
 window.fetch = function (url) {
   if (url.indexOf("/api/fish") >= 0)
@@ -128,9 +135,7 @@ window.fetch = function (url) {
 <script src="../extension/lib.js"></script>
 <script src="../extension/panel.js"></script>
 <script>
-// 0.1.4 起代号默认打码成 ★★★(常驻明文会让每张用户截图都绑死身份)。
-// 截图里用的是假代号,展开显示才说得清「你也有个代号」这件事,不泄露任何真实信息。
-// onclick 要等 /api/mine 那一跳回来才挂上,所以轮询。
+// 截图里用的是假代号,展开显示才说得清「你也有个代号」,不泄露真实信息
 (function showWho() {
   var w = document.getElementById("who");
   if (w && w.onclick) { w.onclick(); return; }

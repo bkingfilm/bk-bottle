@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>宣传图·Steam 竖版 1080x1920</title>
+<style>
+  /* Steam 功能宣传图竖版 v2:1080x1920(9:16)。第一版把插件面板整个截进来太"App",
+     BK 毙了;这版按海报逻辑排:封面当主视觉、卡片错位堆叠、光效做纵深。
+     chrome --headless=new --screenshot=shot-steam-v.png --window-size=1080,1920 file:///.../dev/shot-steam-v.html
+     不进发布包(在 dev/ 下)。 */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1080px; height: 1920px; overflow: hidden; }
+  body {
+    position: relative;
+    background: linear-gradient(180deg, #030c16 0%, #071a2b 34%, #0a2438 78%, #04101d 100%);
+    font-family: "Microsoft YaHei", "PingFang SC", sans-serif;
+    color: #e8f2fa;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 60px 0 56px;
+  }
+  /* 光效:标题后一团青,卡片区一团深蓝,底部一丝琥珀 */
+  .glow { position: absolute; border-radius: 50%; filter: blur(90px); z-index: 0; }
+  .g1 { width: 720px; height: 380px; left: 180px; top: 60px; background: rgba(77, 208, 225, .16); }
+  .g2 { width: 820px; height: 560px; left: 130px; top: 700px; background: rgba(22, 135, 167, .18); }
+  .g3 { width: 700px; height: 300px; left: 190px; top: 1560px; background: rgba(255, 207, 110, .07); }
+  .z { position: relative; z-index: 1; }
+
+  .brand { font-size: 34px; letter-spacing: 2px; color: #8fb3cc; }
+  .brand b { color: #e8f2fa; }
+
+  h1 { margin-top: 24px; font-size: 72px; line-height: 1.26; text-align: center; letter-spacing: 2px; }
+  h1 b { color: #4dd0e1; text-shadow: 0 0 46px rgba(77, 208, 225, .45); }
+  .sub { margin-top: 20px; font-size: 30px; line-height: 1.7; color: #8fb3cc; text-align: center; }
+
+  /* 瓶主签 */
+  .from {
+    margin-top: 34px; padding: 10px 30px; font-size: 26px; color: #ffcf6e;
+    background: rgba(255, 207, 110, .08); border: 1px dashed rgba(255, 207, 110, .4);
+    border-radius: 16px;
+  }
+  .from b { color: #ffcf6e; }
+
+  /* 卡片堆:第一张全露居中,第二张右倾露大半,第三张左倾只露上沿,像刚从瓶里倒出来 */
+  .stack { margin-top: 26px; width: 840px; position: relative; }
+  .card {
+    width: 800px; margin: 0 auto; background: #10344f;
+    border: 1px solid #2a5a82; border-radius: 20px; padding: 12px;
+    box-shadow: 0 26px 54px rgba(0, 0, 0, .5);
+  }
+  .card img { display: block; width: 100%; border-radius: 12px; }
+  .card .t { display: flex; align-items: center; gap: 14px; padding: 13px 8px 5px; font-size: 28px; }
+  .tag { font-size: 22px; color: #66c0f4; }
+  .c1 { position: relative; z-index: 3; transform: rotate(-1.2deg); }
+  .c1 img { aspect-ratio: 2.15; object-fit: cover; }
+  .c2 { position: relative; z-index: 2; transform: rotate(1.6deg); margin-top: -4px; }
+  .c2 img { height: 150px; object-fit: cover; object-position: center 30%; }
+  .c3 { position: relative; z-index: 1; transform: rotate(-2deg); margin-top: -8px; }
+  .c3 img { height: 96px; object-fit: cover; object-position: center 20%; }
+
+  /* 两颗按钮:照抄站里的形制,示意「捞到之后能干嘛」 */
+  .btns { margin-top: 38px; display: flex; gap: 24px; }
+  .btn {
+    padding: 20px 58px; font-size: 32px; font-weight: 600; border-radius: 16px;
+  }
+  .ghost { background: #10344f; border: 1px solid #2a5a82; color: #e8f2fa; }
+  .prim {
+    background: linear-gradient(135deg, #1687a7, #4dd0e1); color: #04202e;
+    box-shadow: 0 14px 40px rgba(77, 208, 225, .25);
+  }
+
+  .feats { margin-top: 36px; }
+  .feats li {
+    list-style: none; font-size: 31px; color: #c9dceb; line-height: 1.45;
+    padding: 9px 0 9px 50px; position: relative;
+  }
+  .feats li::before { content: "✓"; position: absolute; left: 0; color: #4dd0e1; font-weight: 700; }
+
+  .addr {
+    margin-top: 38px; padding: 16px 48px;
+    font-family: ui-monospace, Consolas, monospace; font-size: 36px; letter-spacing: 3px;
+    color: #04202e; font-weight: 700;
+    background: linear-gradient(135deg, #2bb3cf, #7ee4f2); border-radius: 999px;
+    box-shadow: 0 16px 46px rgba(77, 208, 225, .3);
+  }
+</style>
+</head>
+<body>
+<div class="glow g1"></div><div class="glow g2"></div><div class="glow g3"></div>
+
+<div class="brand z">🌊🍾 <b>BK漂流瓶</b></div>
+<h1 class="z">现在也能扔<br><b>Steam 里的游戏</b>了</h1>
+<div class="sub z">不光是视频。把你真的在玩的游戏装进瓶子，<br>捞一瓶陌生人的试试。</div>
+
+<div class="from z">🧭 这瓶来自 <b>灯塔 657</b></div>
+
+<div class="stack z">
+  <div class="card c1">
+    <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/4115450/40b2044606b59e0cdd9fb89738895fea8a22067c/header_schinese.jpg?t=1786515952" alt="">
+    <div class="t"><span class="tag">Steam</span>影之刃零</div>
+  </div>
+  <div class="card c2">
+    <img src="https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/206440/header.jpg?t=1780927584" alt="">
+    <div class="t"><span class="tag">Steam</span>To the Moon《去月球》</div>
+  </div>
+  <div class="card c3">
+    <img referrerpolicy="no-referrer" src="https://i2.hdslb.com/bfs/archive/02da0497ba0dfb06dd0e57d3dd99cf9ade3099a9.jpg@860w_480h" alt="">
+  </div>
+</div>
+
+<div class="btns z">
+  <div class="btn ghost">🌟 收藏</div>
+  <div class="btn prim">🎣 再捞一个</div>
+</div>
+
+<ul class="feats z">
+  <li>Steam 商店页一键「装进瓶子」</li>
+  <li>自己的资料页一键装入「最近在玩」</li>
+  <li>游戏和视频可以混着装一瓶</li>
+  <li>不读浏览记录，不用注册</li>
+</ul>
+
+<div class="addr z">b.bking.film</div>
+</body>
+</html>

@@ -4,8 +4,12 @@
 
 | 商店 | 状态 | 时间 |
 |---|---|---|
-| **Edge Add-ons** | **In review**（已提交，微软说 7 个工作日内回） | 2026-07-29 提交 |
-| **Chrome Web Store** | **待审核**（已提交送审，1-3 天出结果，结果发到 chozuihei@gmail.com） | 2026-07-29 提交 |
+| **Edge Add-ons** | **In review**（0.1.1，08-10 BK 确认仍未出结果） | 2026-07-29 提交 |
+| **Chrome Web Store** | **0.1.7 已过审上架**（08-11 确认，商店公开页版本已更新）。**0.1.8 已打包待提交** = Steam 支持：商店页「装进瓶子」+ 资料页一键装最近在玩 + 面板扔游戏瓶；新增 3 条 host permission（store.steampowered.com/app、steamcommunity.com/id、/profiles），会触发人工审核。审核备注 CERT-NOTES.txt 已更新（1822 字符），提交时整段替换后台的测试说明 | 0.1.7: 2026-08-10 提交、08-11 过审；0.1.8: 待 BK 提交 |
+
+0.1.6 = 首次安装自动打开 `b.bking.film/?from=ext-install` 绑定身份 + 网页端引导（网页侧 08-10 已先行上线）。Steam 功能按计划留 0.1.7 单独发版（要新增 steamcommunity.com host permission）；其中 worker + 网页侧（贴 Steam 链接扔瓶、游戏卡片、书签抓取）08-10 晚已独立上线，不依赖插件过审。
+
+**08-10 22:48 版本顺延**：后台不认同号重传（0.1.6 已占用），修复包升为 **0.1.7**（`dist\bk-bottle-0.1.7.zip`）= 激活修复 + 面板 Steam 瓶渲染修复（原来会拼 `youtube.com/watch?v=undefined` 死链并错标 YouTube 胶囊），零权限变化，BK 当晚重传提交。**Steam 功能版（steamcommunity.com host permission）顺延为 0.1.8**。
 
 Edge 侧已备案的身份信息（以后收紧 CORS、查商店页都要用）：
 

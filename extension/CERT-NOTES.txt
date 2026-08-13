@@ -1,21 +1,21 @@
-BK Bottle lets people anonymously exchange videos they are actually watching. A user puts their own video links into a "bottle" and throws it into the sea; in return they get a random bottle thrown by a stranger. No account, no sign-in, no messaging, no ads, nothing hidden or locked.
+BK Bottle lets people anonymously exchange videos they are watching and games they are playing. Users put links into a "bottle", throw it into the sea, and get a random stranger's bottle back. No account, no sign-in, no messaging, no ads.
 
-HOW TO TEST (no test account needed). The UI is Chinese, so:
+HOW TO TEST (no test account needed; UI is Chinese):
 
-1. Click the toolbar icon. The panel opens and automatically fetches one random bottle, showing 2-5 YouTube/Bilibili video cards. Clicking a card opens that video.
-2. "再捞一个" = fish another bottle. "有意思" = upvote this bottle.
-3. Open any YouTube watch page or Bilibili video page. One button "装进瓶子" (= add to bottle) appears next to the like/share row. Click it; the queue count in the panel goes up.
-4. In the panel, "扔进海里" (= throw into the sea) submits the queued videos as a new bottle. When the queue is empty that button reads "去网页扔一瓶" and just opens our web page.
+1. Click the toolbar icon: the panel fetches one random bottle (YouTube/Bilibili/Steam cards). "再捞一个" = fish another, "有意思" = upvote.
+2. On any YouTube watch page, Bilibili video page or Steam store game page, one button "装进瓶子" (= add to bottle) appears near the title/like row and adds that item to the queue.
+3. On a public Steam community profile (e.g. steamcommunity.com/id/st4ck), "把最近在玩的装进瓶子" (= bottle my recent games) appears above the Recent Activity block and adds the 2-4 games shown there.
+4. In the panel "扔进海里" (= throw) submits the queue as a new bottle; with an empty queue it reads "去网页扔一瓶" and just opens our site.
 
 PERMISSIONS
 
-storage: keeps the user's anonymous local id and the not-yet-thrown queue on their own machine; nothing is uploaded.
+storage: anonymous local id + the not-yet-thrown queue, kept on the user's machine.
 
-https://b.bking.film/*: the extension's own backend (fetch a bottle, throw a bottle, show how many people liked your bottles).
+https://b.bking.film/*: our own backend (fetch/throw bottles, receipts).
 
-https://www.youtube.com/* and https://www.bilibili.com/video/*: used only to inject that single "add to bottle" button, and only at the moment the user clicks it, to read the current video's public metadata (video id, title, thumbnail URL, channel or uploader name). Bilibili thumbnails must be read client-side because Bilibili blocks datacenter IP ranges, so our server cannot fetch them.
+youtube.com, bilibili.com/video, store.steampowered.com/app, steamcommunity.com/id + /profiles: only to inject that one button and, at the moment the user clicks it, read the current page's public metadata (video/app id, title; Bilibili thumbnails must be read client-side because Bilibili blocks datacenter IPs). Steam titles and covers are re-fetched server-side from Steam's public appdetails API, so the extension uploads only app ids. No Steam login is read or required.
 
-No browsing history is accessed; the history permission is not requested. The extension does not override the new tab page, homepage or search engine. No remote code: all JS ships inside the package, no eval, no external scripts.
+No history access (permission not requested). No new tab, homepage or search override. No remote code, no eval.
 
 Source (MIT): https://github.com/bkingfilm/bk-bottle
 Privacy policy: https://b.bking.film/privacy
