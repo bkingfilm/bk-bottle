@@ -269,11 +269,12 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <div id="langMenu">
       <button data-lang="cn" onclick="setLang('cn')">简体中文</button>
       <button data-lang="tw" onclick="setLang('tw')">繁體中文</button>
+      <button data-lang="en" onclick="setLang('en')">English</button>
     </div>
   </div>
   <header>
     <div class="logo">🌊🍾</div>
-    <h1>BK漂流瓶</h1>
+    <h1 id="brand">BK漂流瓶</h1>
     <p id="subTitle"></p>
     <div id="siteAddr" onclick="copyAddr()" role="button" tabindex="0">b.bking.film</div>
   </header>
@@ -360,6 +361,12 @@ function $(id) { return document.getElementById(id); }
 // 繁体版用台港说法而不是逐字转换:视频→影片、链接→連結、信息茧房→同溫層
 var I18N = {
   cn: {
+    brand: "BK漂流瓶",
+    docTitle: "BK漂流瓶 · 和陌生人交换正在看的视频",
+    biliTag: "B站",
+    bmNoRecent: "这里没有「最近活动」的游戏。打开你自己的 Steam 资料页再点",
+    bmNoApp: "打开某个游戏自己的商店页再点，一次装这一个游戏",
+    bmNoVid: "这一页没找到视频。打开 YouTube/B站 的历史页、你的 Steam 资料页或某个游戏的商店页再点",
     sub: "把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。",
     seaHas: ["海里现在有 ", " 个瓶子"],
     tabThrow: "🍾 扔一个瓶子", tabFish: "🎣 捞一个瓶子",
@@ -429,6 +436,12 @@ var I18N = {
     },
   },
   tw: {
+    brand: "BK漂流瓶",
+    docTitle: "BK漂流瓶 · 和陌生人交換正在看的影片",
+    biliTag: "B站",
+    bmNoRecent: "這裡沒有「最近活動」的遊戲。打開你自己的 Steam 個人頁再點",
+    bmNoApp: "打開某個遊戲自己的商店頁再點，一次裝這一個遊戲",
+    bmNoVid: "這一頁沒找到影片。打開 YouTube/B站 的歷史頁、你的 Steam 個人頁或某個遊戲的商店頁再點",
     sub: "把你最近在看的影片裝進瓶子扔進海裡，再撈一個陌生人的上來。",
     seaHas: ["海裡現在有 ", " 個瓶子"],
     tabThrow: "🍾 扔一個瓶子", tabFish: "🎣 撈一個瓶子",
@@ -497,17 +510,105 @@ var I18N = {
         + "\n\n這是 BK漂流瓶，大家把自己真實在看在玩的東西扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
     },
   },
+  en: {
+    brand: "BK Bottle",
+    docTitle: "BK Bottle · swap what you are actually watching with a stranger",
+    biliTag: "Bilibili",
+    bmNoRecent: "No recent games here. Open your own Steam profile page and click again",
+    bmNoApp: "Open a single game store page and click again, one game per click",
+    bmNoVid: "No videos found on this page. Open your YouTube or Bilibili history, your Steam profile, or a game store page and click again",
+    sub: "Put what you are actually watching into a bottle, throw it into the sea, and pull a stranger's bottle back out.",
+    seaHas: ["there are ", " bottles in the sea right now"],
+    tabThrow: "🍾 Throw a bottle", tabFish: "🎣 Fish one out",
+    h2Throw: "Fill a bottle", h2Fish: "Fish one out",
+    hintThrow: 'Hit share and copy link under a video, then paste it below. <b style="color:var(--glow)">One to five links is plenty, one still counts as a bottle</b>. YouTube, Bilibili and Steam store pages all work, and you can mix them in one bottle. Pick what you are really watching and playing, not what looks good.',
+    hintFish: "Pull out a random bottle somebody threw in and see what is outside your own bubble. Fair warning, most of this sea is Chinese right now, YouTube and Bilibili links with Chinese titles. The Steam bottles travel better, a game name is a game name in any language.",
+    demoNote: "🌊 A bottle just washed up at your feet, take a look at what someone else is watching",
+    phLinks: "Paste links here, one per line\nhttps://youtu.be/xxxx\nhttps://www.bilibili.com/video/BVxxxx\nhttps://store.steampowered.com/app/xxxx",
+    playing: "playing",
+    grabPc: "⚡ On a computer: grab what you recently watched and played in one click (does not work on phones)",
+    grabPc1: "Press <b>Ctrl+Shift+B</b> to show the bookmarks bar, the strip under the address bar",
+    grabPc2: "<b>Hold</b> this button with the mouse, drag it onto the bookmarks bar and let go:",
+    grabPc3a: "Open ", grabPc3b: " or ", grabPc3c: ", click the bookmark you just made, and this page fills itself in",
+    grabPc3s: "your Steam profile",
+    grabMb: "📱 On Android: share straight from YouTube or Bilibili, no copy paste",
+    grabMb1: "Open this page in Chrome and pick Add to Home screen from the menu",
+    grabMb2: "After that, hit share in YouTube and pick this site, and the link lands here by itself",
+    grabMb3: "You can share a few in a row and throw them together (does not work on iPhone, copy paste instead)",
+    counter: ["picked up ", " links"],
+    btnThrow: "Throw it in", btnFish: "Cast the net",
+    footer1: "Caught something good, or did something break?", footer2: "Say so on Discord: ",
+    footer3: "This thing does not read your browsing history, the code is on ",
+    myNameNew: function (n) { return "your name out at sea is " + n + ", every bottle you throw carries it"; },
+    myNameHas: function (n, c) { return "you are " + n + ", you have thrown " + c; },
+    nickPeek: "tap to see your name", nickHide: "tap to hide it",
+    goodGot: function (g) { return ", picked up <b>" + g + "</b> 🌟"; },
+    yysGot: function (y) { return ", <b>" + y + "</b> yys saved up"; },
+    fishedOnly: ", somebody has fished it out already", drifting: ", still drifting out there",
+    cheer: function (n) { return "🌟 While you were gone, " + n + " more people saved your bottle<br>Maybe throw another one"; },
+    folCount: function (n) { return "⭐ You remembered <b>" + n + "</b> bottle owners, their new bottles reach you first"; },
+    folAdd: "⭐ Remember this one", folDone: "✅ Remembered, their new bottles reach you first",
+    sealing: "Sealing the bottle, fetching titles…",
+    biliFail: "Could not find any video behind those Bilibili links",
+    b23Fail: "That b23.tv short link did not resolve, open it and paste the full address instead",
+    addrCopied: "✅ Address copied",
+    thrown: function (c) { return "🍾 A bottle holding " + c + " links has drifted off"; },
+    throwFail: "Could not throw it, try again", netErr: "Network hiccup, try again",
+    fishErr: "The net broke, try again",
+    exhausted: "🏆 You have fished this whole sea dry.<br>Throw one in and wait for the new ones to drift by.",
+    goThrow: "Go throw one",
+    emptySea: "No bottles in this sea yet.<br>Throw the first one and wait for whoever comes by.",
+    fromWho: "🧭 This one is from ", seedNote: " (picked by the site)", followedNote: " · one you remembered",
+    voteGood: "🌟 Save it", fishAgain: "🎣 Fish another", shareBtn: "📋 Share this one",
+    voteDone: "🌟 Saved",
+    likedEntry: function (n) { return "⭐ Saved (" + n + ")"; },
+    likedHide: "Hide saved",
+    shareOk: "✅ Copied, post it anywhere",
+    openIt: "Open it and see",
+    autofill: function (n) { return "⚡ " + n + " videos loaded, give them a look and throw"; },
+    shared: "⚡ Got the shared video, you can add a few more before throwing",
+    overflow: function (n) {
+      return "A bottle holds 10 at most, you are " + n + " over. Drop a few, or keep them for the next bottle";
+    },
+    nudge: "🍾 You have fished out 3 of other people's, and the sea still has none of yours",
+    nudgeGo: "Go throw one", nudgeLater: "Keep fishing",
+    voteHint: "Come back and save it if it was any good, good bottles drift to more people",
+    extNudge: 'With the browser extension, fishing is <b>one click in the toolbar</b>, no need to open this page first. YouTube and Bilibili watch pages also get a bottle button, so you can collect as you go.',
+    extGo: "Go get it", extNo: "No thanks",
+    extWelcome: 'Extension installed. From now on <b>click the 🌊 in the top right</b> to fish, this page is optional. On YouTube and Bilibili watch pages there is a bottle button under the player, tap it when you see something worth passing on and throw them all at once from the extension.',
+    extWelcomeOk: "Got it",
+    shareText: function (lines, origin, kind) {
+      var head = kind === "g" ? "🍾 Fished out a bottle of what a stranger is playing:"
+        : kind === "m" ? "🍾 Fished out a bottle of what a stranger is watching and playing:"
+        : "🍾 Fished out a bottle of what a stranger is watching:";
+      return head + "\n" + lines
+        + "\n\nThis is BK Bottle, people drop what they are really watching and playing into the sea and swap it anonymously, just to see what is outside their own bubble\n\nNo signup, go pull one out: " + origin;
+    },
+  },
 };
 
 var lang = localStorage.getItem("yb_lang");
-if (lang !== "cn" && lang !== "tw") {
-  lang = /zh-(TW|HK|MO)|zh-Hant/i.test(navigator.language || "") ? "tw" : "cn";
+// ?lang=en 这类参数优先,给对外推广的落地链接用,进来就是对的语言
+try {
+  var qLang = new URLSearchParams(location.search).get("lang");
+  if (qLang === "cn" || qLang === "tw" || qLang === "en") {
+    lang = qLang;
+    localStorage.setItem("yb_lang", qLang);
+  }
+} catch (e) {}
+if (lang !== "cn" && lang !== "tw" && lang !== "en") {
+  var navLang = navigator.language || "";
+  lang = /^zh/i.test(navLang)
+    ? (/zh-(TW|HK|MO)|zh-Hant/i.test(navLang) ? "tw" : "cn")
+    : "en";
 }
 var T = I18N[lang];
 
 function applyLang() {
   T = I18N[lang];
-  document.documentElement.lang = lang === "tw" ? "zh-Hant" : "zh-CN";
+  document.documentElement.lang = lang === "tw" ? "zh-Hant" : lang === "en" ? "en" : "zh-CN";
+  if (T.brand) $("brand").textContent = T.brand;
+  if (T.docTitle) document.title = T.docTitle;
   $("subTitle").innerHTML = T.sub + '<br>' + T.seaHas[0] + '<span id="stats">…</span>' + T.seaHas[1];
   $("tabThrow").textContent = T.tabThrow;
   $("tabFish").textContent = T.tabFish;
@@ -537,7 +638,7 @@ function applyLang() {
   $("footer1").textContent = T.footer1;
   $("footer2").textContent = T.footer2;
   $("footer3").textContent = T.footer3;
-  $("langBtn").textContent = (lang === "tw" ? "繁" : "简") + " ▾";
+  $("langBtn").textContent = (lang === "tw" ? "繁" : lang === "en" ? "EN" : "简") + " ▾";
   document.querySelectorAll("#langMenu button").forEach(function (b) {
     b.classList.toggle("on", b.dataset.lang === lang);
   });
@@ -788,7 +889,7 @@ function renderPreview() {
   box.innerHTML = items.map(function (it, i) {
     var c = pvCache[pvKey(it)] || {};
     var img = it.vid ? "https://i.ytimg.com/vi/" + it.vid + "/default.jpg" : thumbSmall(c.thumb, 240);
-    var badge = it.bvid ? '<span class="pf-b">B站</span>'
+    var badge = it.bvid ? '<span class="pf-b">' + T.biliTag + "</span>"
       : it.appid ? '<span class="pf-s">Steam</span>' : it.list ? "📃 " : "";
     var title = c.title || (it.bvid || it.list || it.appid || it.vid);
     return '<div class="pv' + (c.title ? "" : " load") + '">'
@@ -945,8 +1046,9 @@ function canInstallExt() {
 }
 
 function maybeExtNudge() {
-  // 3 是扔瓶提示的位置,让它先说完,这条排在后面
-  if (fishCount < 4 || localStorage.getItem("yb_extnudged") || !canInstallExt()) return;
+  // 门槛 4 降到 2:859 个访客里 799 个只来过一天,卡在第 4 瓶等于把入口只留给会回来的人。
+  // 代价是它排到了第 3 瓶那条扔瓶提示前面,两条各弹一次、各自记 localStorage,不打架
+  if (fishCount < 2 || localStorage.getItem("yb_extnudged") || !canInstallExt()) return;
   var n = $("extNudge");
   if (n.style.display === "block") return;
   n.innerHTML = T.extNudge
@@ -1109,7 +1211,7 @@ function videoCardHtml(v) {
   } else if (v.bvid) {
     url = "https://www.bilibili.com/video/" + v.bvid;
     img = thumbSmall(v.thumb, 800);
-    badge = '<span class="pf-b">B站</span>';
+    badge = '<span class="pf-b">' + T.biliTag + "</span>";
   } else if (v.list) {
     url = "https://www.youtube.com/playlist?list=" + v.list;
     img = v.thumb || "";
@@ -1137,15 +1239,17 @@ function esc(s) {
 // 装进瓶子的是 Steam 算法的原样输出,不是他玩过的游戏):
 // 资料页只抓「最近活动」区块(.recent_games 里的才是真实玩过的);
 // 单个游戏的商店页只装当前这一个;其他 Steam 页面直接拒绝
-var BM_SRC = "(function(){var seen={},yt=[],bv=[],sa=[],h=location.hostname;"
+// 三条 alert 文案跟着界面语言走,英文用户拖去的书签弹的也得是英文
+function bmSrc() {
+  return "(function(){var seen={},yt=[],bv=[],sa=[],h=location.hostname;"
   + "if(h==='steamcommunity.com'){"
   + "document.querySelectorAll('.recent_games a[href]').forEach(function(a){"
   + "var s=a.href.match(/\\/app\\/(\\d{1,7})/);"
   + "if(s&&!seen['s'+s[1]]){seen['s'+s[1]]=1;sa.push(s[1])}});"
-  + "if(!sa.length){alert('这里没有「最近活动」的游戏。打开你自己的 Steam 资料页再点');return}"
+  + "if(!sa.length){alert(" + JSON.stringify(T.bmNoRecent) + ");return}"
   + "}else if(h==='store.steampowered.com'){"
   + "var sm=location.pathname.match(/^\\/app\\/(\\d{1,7})/);"
-  + "if(sm){sa.push(sm[1])}else{alert('打开某个游戏自己的商店页再点，一次装这一个游戏');return}"
+  + "if(sm){sa.push(sm[1])}else{alert(" + JSON.stringify(T.bmNoApp) + ");return}"
   + "}else{"
   + "document.querySelectorAll('a[href]').forEach(function(a){"
   + "var m=a.href.match(/[?&]v=([A-Za-z0-9_-]{11})/)||a.href.match(/\\/shorts\\/([A-Za-z0-9_-]{11})/);"
@@ -1154,14 +1258,15 @@ var BM_SRC = "(function(){var seen={},yt=[],bv=[],sa=[],h=location.hostname;"
   + "if(b&&!seen[b[1]]){seen[b[1]]=1;bv.push(b[1])}});"
   + "}"
   + "yt=yt.slice(0,10);bv=bv.slice(0,10);sa=sa.slice(0,10);"
-  + "if(!yt.length&&!bv.length&&!sa.length){alert('这一页没找到视频。打开 YouTube/B站 的历史页、你的 Steam 资料页或某个游戏的商店页再点');return}"
+  + "if(!yt.length&&!bv.length&&!sa.length){alert(" + JSON.stringify(T.bmNoVid) + ");return}"
   + "var q=[];if(yt.length)q.push('vids='+yt.join(','));if(bv.length)q.push('bvs='+bv.join(','));if(sa.length)q.push('apps='+sa.join(','));"
   + "window.open('" + location.origin + "/#'+q.join('&'))})()";
+}
 // 语言切换会重建这个链接元素,所以每次都要重新挂
 function bindBookmarklet() {
   var el = $("bookmarklet");
   if (!el) return;
-  el.href = "javascript:" + encodeURIComponent(BM_SRC);
+  el.href = "javascript:" + encodeURIComponent(bmSrc());
   el.onclick = function (e) { e.preventDefault(); };
 }
 
@@ -1277,7 +1382,7 @@ function doFish(isDemo) {
       html += '<div class="vlist">';
       d.videos.forEach(function (v) { html += videoCardHtml(v); });
       html += "</div>"
-        + '<div class="wm">🌊 BK漂流瓶 · ' + location.host + "</div>"
+        + '<div class="wm">🌊 ' + T.brand + " · " + location.host + "</div>"
         + '<div class="by">' + T.voteHint + "</div>"
         + '<div class="fb" id="fb">'
         + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'

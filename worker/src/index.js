@@ -110,6 +110,28 @@ a{color:var(--glow)}
 </html>
 `;
 
+// 英文落地页:?lang=en 时把 head 里的中文 og/title 换成英文。抓取器只读 head,
+// 贴到英文版块的链接不能预览出一串中文。正文语言由前端那份 I18N 自己切。
+// 替换表必须长串在前短串在后,否则「BK漂流瓶」会先把长标题啃掉一半。
+const EN_TITLE = "BK Bottle · swap what you are actually watching with a stranger";
+const EN_DESC = "Put the videos and games you are actually into in a bottle, throw it into the sea, and pull a stranger's bottle back out. No signup, no comments, no feed, just a look outside your own bubble.";
+function enHead(html) {
+  const cut = html.indexOf("</head>");
+  if (cut < 0) return html;
+  let head = html.slice(0, cut);
+  const swaps = [
+    ["BK漂流瓶 · 和陌生人交换正在看的视频", EN_TITLE],
+    ["把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。不用注册，没有留言，看看信息茧房外面长什么样。", EN_DESC],
+    ["BK漂流瓶", "BK Bottle"],
+    ["视频漂流瓶", "video message in a bottle"],
+    ['content="zh_CN"', 'content="en_US"'],
+    ['"inLanguage": ["zh-CN", "zh-TW"]', '"inLanguage": ["en", "zh-CN", "zh-TW"]'],
+    ['<html lang="zh-CN">', '<html lang="en">'],
+  ];
+  for (const [a, b] of swaps) head = head.split(a).join(b);
+  return head + html.slice(cut);
+}
+
 // 最小 service worker:只为满足「可安装」条件,不做离线缓存(内容本来就要联网)
 const SW = "self.addEventListener('install',function(){self.skipWaiting()});"
   + "self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim())});"
@@ -141,11 +163,24 @@ const SENSITIVE = [
   // 违法
   "赌博", "賭博", "博彩", "网赌", "網賭", "洗钱", "洗錢", "毒品", "大麻", "冰毒",
   "枪支", "槍支", "传销", "傳銷",
+  // 规避网络管理(2026-08-18 加):08-18 抓到一瓶「无需科学…轻松玩转 TikTok」eSIM 跨境教程。
+  // 「翻墙/翻牆」上面已有,这里补口语化的说法。
+  "科学上网", "科學上網", "无需科学", "無需科學", "机场节点", "機場節點",
+  "改美版", "国行改", "國行改",
+  // 虚拟货币与非法荐股(2026-08-18 加):同一批瓶子里 10 条有 6 条是币圈行情与外汇喊单。
+  // 国内虚拟货币交易与荐股配资均属违规金融信息,且这产品是换游戏视频的,本来也不该有。
+  "山寨币", "山寨幣", "炒币", "炒幣", "合约交易", "合約交易", "爆仓", "爆倉",
+  "土狗币", "土狗幣", "空投撸毛", "加密货币", "加密貨幣", "比特币", "比特幣", "以太坊",
+  "荐股", "薦股", "内幕消息", "內幕消息", "带单", "帶單", "喊单", "喊單",
+  "配资", "配資", "价格行为学", "價格行為學", "非农", "非農",
 ];
 
 // 拉丁词单独一张表,小写比对,标题大小写混写逃不掉。
 // 别加太短的词:jav 会命中 javascript 这种,加之前先想想会不会误伤正常词
-const SENSITIVE_LATIN = ["porn", "pornhub", "onlyfans", "hentai", "xvideos", "r18"];
+// 2026-08-18 加 vpn/v2ray/shadowsocks/esim/shitcoin/altcoin。
+// 刻意不加 clash:Clash of Clans、Clash Royale 会被整片扫掉,误伤远大于收益。
+const SENSITIVE_LATIN = ["porn", "pornhub", "onlyfans", "hentai", "xvideos", "r18",
+  "vpn", "v2ray", "shadowsocks", "esim", "shitcoin", "altcoin"];
 
 // 时政类频道黑名单(2026-08-12 BK 令):这些号无论发什么,整瓶隔离。
 // 按 author 子串匹配,简繁双版本;名单可随时续补
@@ -623,7 +658,20 @@ async function collectStats(env) {
     });
   }
   rows.sort((a, b2) => b2.ts - a.ts);
-  const vl = await env.BOTTLES.list({ prefix: "v:", limit: 1000 });
+  // v: 键 2026-08-18 已超 1000,单页 list 只拿得到下限(当天后台 877,全量实为 916),
+  // 而且截断点会浮动,表现成「捞瓶人数负增长」。这里按 cursor 翻页取全量,
+  // 10 页兜底防一次调用吃光 KV 的 list 额度;超过 10 页才算真的 capped。
+  const vkeys = [];
+  let vcursor = null, vcapped = false;
+  for (let i = 0; i < 10; i++) {
+    const page = await env.BOTTLES.list(
+      vcursor ? { prefix: "v:", limit: 1000, cursor: vcursor } : { prefix: "v:", limit: 1000 });
+    for (const k of page.keys) vkeys.push(k);
+    if (page.list_complete) { vcursor = null; break; }
+    vcursor = page.cursor;
+    if (i === 9) vcapped = true;
+  }
+  const vl = { keys: vkeys, list_complete: !vcapped };
   const visitors = vl.keys.length;
   // 回访 = 在不同的日子来过两天以上
   const returning = vl.keys.filter((k) => ((k.metadata || {}).d || 1) >= 2).length;
@@ -671,7 +719,7 @@ async function handleAdmin(url, env) {
     + "<div>海里瓶子<b>" + s.total + "</b></div>"
     + "<div>真人瓶<b>" + s.real + "</b></div>"
     + "<div>扔过瓶的设备<b>" + s.devices + "</b></div>"
-    + "<div>捞过瓶的设备" + (s.visitorsCapped ? "（超1000）" : "") + "<b>" + s.visitors + "</b></div>"
+    + "<div>捞过瓶的设备" + (s.visitorsCapped ? "（超1万·仍被截断）" : "") + "<b>" + s.visitors + "</b></div>"
     + "<div>扔瓶转化率<b>"
     + (s.visitors ? Math.round((s.devices / s.visitors) * 100) + "%" : "—")
     + "</b></div>"
@@ -821,7 +869,10 @@ async function route(req, env) {
       }
       if (p === "/" || p === "/index.html") {
         // 分享卡片的 og 标签要绝对地址,注入当前 origin,换域名不用改 HTML
-        const html = HTML.split("__ORIGIN__").join(url.origin);
+        let html = HTML.split("__ORIGIN__").join(url.origin);
+        // ?lang=en 的落地链接把 head 换成英文:抓取器只读 head,英文版块贴出来的
+        // 卡片不能是一串中文。页面正文由前端那份 I18N 自己切,这里只管 og
+        if (url.searchParams.get("lang") === "en") html = enHead(html);
         return new Response(html, { headers: { "Content-Type": "text/html; charset=utf-8" } });
       }
       if (p === "/manifest.webmanifest") {
