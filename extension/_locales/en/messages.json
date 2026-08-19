@@ -1,9 +1,9 @@
 {
-  "extName":        { "message": "Video Bottle · Random YouTube picks from strangers" },
+  "extName":        { "message": "BK Bottle - Video & Game Swap" },
   "extDesc":        { "message": "Escape the algorithm. Click the bottle for videos a stranger is watching and games they are playing. No history access, no account, no new tab takeover." },
-  "actionTitle":    { "message": "Video Bottle · Catch one" },
+  "actionTitle":    { "message": "BK Bottle - Catch one" },
 
-  "brand":          { "message": "🌊 Video Bottle" },
+  "brand":          { "message": "🌊 BK Bottle" },
   "btnAgain":       { "message": "🎣 Another one" },
   "btnGood":        { "message": "🌟 Save" },
   "goodDone":       { "message": "🌟 Saved" },

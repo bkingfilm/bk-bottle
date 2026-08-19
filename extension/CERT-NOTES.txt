@@ -1,8 +1,10 @@
+v0.2.0: title rewritten for policy 1.1.2 - it now states the function and drops the third-party brand. No code or permission change.
+
 BK Bottle lets people anonymously exchange videos they are watching and games they are playing. Users put links into a "bottle", throw it into the sea, and get a random stranger's bottle back. No account, no sign-in, no messaging, no ads.
 
 HOW TO TEST (no test account needed; UI is Chinese):
 
-1. Click the toolbar icon: the panel fetches one random bottle (YouTube/Bilibili/Steam cards). "再捞一个" = fish another, "有意思" = upvote.
+1. Click the toolbar icon: the panel fetches one random bottle (YouTube/Bilibili/Steam cards). "再捞一个" = fish another, "收藏" = save/upvote.
 2. On any YouTube watch page, Bilibili video page or Steam store game page, one button "装进瓶子" (= add to bottle) appears near the title/like row and adds that item to the queue.
 3. On a public Steam community profile (e.g. steamcommunity.com/id/st4ck), "把最近在玩的装进瓶子" (= bottle my recent games) appears above the Recent Activity block and adds the 2-4 games shown there.
 4. In the panel "扔进海里" (= throw) submits the queue as a new bottle; with an empty queue it reads "去网页扔一瓶" and just opens our site.

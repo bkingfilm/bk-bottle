@@ -1,3 +1,8 @@
+<!-- 2026-08-15:左栏文案已补 Steam、版本角标升 0.2.0，但**这个壳子现在渲染不出右侧面板**。
+     headless 截出来只有空状态（🎣🌊 占位），因为下面 mock 的 fetch/chrome 接口是 0.1.4 时代的，
+     0.1.8 接 Steam 之后 panel.js 的取数路径已经变了，对不上。旧的 store-shot-1280x800.png 是
+     那之前截的，还能用但只写了 YouTube 和 B站。要重截主图得先把这里的 mock 同步到当前 panel.js，
+     或者照 shot-steam.html 的写法重做一个（那份是 0.1.9 时写的，渲染正常）。 -->
 <!doctype html>
 <html lang="zh-CN">
 <head>
@@ -74,7 +79,7 @@
 </div>
 <div class="foot">
   <span>不读你的浏览记录 · <a href="https://github.com/bkingfilm/bk-bottle">源码</a></span>
-  <span>v0.1.4</span>
+  <span>v0.2.0</span>
 </div>
 
 <script>
@@ -82,12 +87,12 @@
 var pitch = document.createElement("div");
 pitch.className = "pitch";
 pitch.innerHTML =
-  "<h1>捞一个陌生人<br><b>正在看的视频</b></h1>"
+  "<h1>捞一个陌生人<br><b>在看的视频、在玩的游戏</b></h1>"
   + "<p>算法喂给你的东西越来越像你已经点过的。<br>这是一条手工的出路。</p>"
   + "<ul><li>点一下就捞，不用注册</li>"
   + "<li>不读你的浏览记录</li>"
   + "<li>不碰你的新标签页</li>"
-  + "<li>YouTube 和 B站 都能装进瓶子</li></ul>"
+  + "<li>YouTube、B站、Steam 都能装进瓶子</li></ul>"
   + '<span class="addr">b.bking.film</span>';
 document.documentElement.insertBefore(pitch, document.body);
 
