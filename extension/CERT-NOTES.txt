@@ -1,4 +1,4 @@
-v0.2.0: title rewritten for policy 1.1.2 - it now states the function and drops the third-party brand. No code or permission change.
+v0.2.2: two changes since 0.2.0. (1) The panel gains a Previous/Next control to revisit recently fished bottles (stored locally). (2) Bug fix: on Bilibili the button is now injected only after the page finishes its own rendering; injecting earlier could interfere with Bilibili page layout on slow machines. No permission change.
 
 BK Bottle lets people anonymously exchange videos they are watching and games they are playing. Users put links into a "bottle", throw it into the sea, and get a random stranger's bottle back. No account, no sign-in, no messaging, no ads.
 

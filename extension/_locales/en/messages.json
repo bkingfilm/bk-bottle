@@ -5,6 +5,8 @@
 
   "brand":          { "message": "🌊 BK Bottle" },
   "btnAgain":       { "message": "🎣 Another one" },
+  "btnPrev":        { "message": "⬅ Previous" },
+  "btnNext":        { "message": "Next ➡" },
   "btnGood":        { "message": "🌟 Save" },
   "goodDone":       { "message": "🌟 Saved" },
   "pendingTitle":   { "message": "🍾 Waiting to be thrown" },
@@ -32,6 +34,11 @@
   "footNoHistory":  { "message": "Never reads your history" },
   "footStar":       { "message": "Star it on GitHub" },
   "removeTip":      { "message": "Take it out" },
+
+  "nudge":          { "message": "🍾 You've fished out $N$ bottles from other people. The sea still has none of yours.",
+                      "placeholders": { "n": { "content": "$1", "example": "3" } } },
+  "nudgeGo":        { "message": "Throw one in" },
+  "nudgeLater":     { "message": "Keep fishing" },
 
   "rateAsk":        { "message": "If this is useful, leave a line on the store" },
   "rateGo":         { "message": "Rate it" },

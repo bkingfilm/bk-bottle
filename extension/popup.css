@@ -37,6 +37,24 @@ body.popup .vlist.cap { max-height: 272px; }
 .rate button.go { color: var(--amber); border-color: rgba(255, 207, 110, .5); }
 .rate button:hover { border-color: var(--glow); }
 
+/* 扯瓶引导：捞够 3 瓶、自己一瓶没扔过的人才看得到。
+   比评分条(.rate)热一档：那条只对商店排名有好处，这条对这片海有用。
+   但比回执框(.receipt)轻一档：回执是他自己挣来的，这条是我们开口讨东西。 */
+.nudge {
+  display: none; margin-top: 10px; padding: 9px 12px;
+  background: rgba(255, 207, 110, .06);
+  border: 1px solid rgba(255, 207, 110, .3); border-radius: 10px;
+  font-size: 12.5px; line-height: 1.7; color: var(--amber);
+}
+.nudge.on { display: block; }
+.nudge .row { display: flex; gap: 8px; margin-top: 8px; }
+.nudge button {
+  flex: 1; background: none; border: 1px solid var(--line); border-radius: 7px;
+  color: var(--dim); font-size: 12px; padding: 4px 9px; cursor: pointer;
+}
+.nudge button.go { color: var(--amber); border-color: rgba(255, 207, 110, .5); }
+.nudge button:hover { border-color: var(--glow); }
+
 /* 滚动条别太抢眼 */
 body.popup::-webkit-scrollbar { width: 8px; }
 body.popup::-webkit-scrollbar-track { background: transparent; }

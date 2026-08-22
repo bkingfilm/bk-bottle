@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "0.2.0",
+  "version": "0.2.3",
   "description": "__MSG_extDesc__",
   "default_locale": "zh_CN",
   "icons": {
@@ -10,7 +10,9 @@
     "48": "icons/icon-48.png",
     "128": "icons/icon-128.png"
   },
-  "permissions": ["storage"],
+  "permissions": [
+    "storage"
+  ],
   "host_permissions": [
     "https://b.bking.film/*",
     "https://www.youtube.com/*",
@@ -19,7 +21,9 @@
     "https://steamcommunity.com/id/*",
     "https://steamcommunity.com/profiles/*"
   ],
-  "background": { "service_worker": "sw.js" },
+  "background": {
+    "service_worker": "sw.js"
+  },
   "action": {
     "default_title": "__MSG_actionTitle__",
     "default_popup": "popup.html"
@@ -33,13 +37,21 @@
         "https://steamcommunity.com/id/*",
         "https://steamcommunity.com/profiles/*"
       ],
-      "js": ["collect.js"],
-      "css": ["inject.css"],
+      "js": [
+        "collect.js"
+      ],
+      "css": [
+        "inject.css"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://b.bking.film/*"],
-      "js": ["bridge.js"],
+      "matches": [
+        "https://b.bking.film/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
       "run_at": "document_idle"
     }
   ]

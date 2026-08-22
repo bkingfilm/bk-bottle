@@ -260,6 +260,17 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
   background: var(--card); border: 1px solid var(--glow);
   color: var(--glow); text-decoration: none; font-weight: bold; cursor: grab;
 }
+/* 扔瓶页的插件入口。跟捞瓶页那条(#extNudge)不是一回事:那条是「装了更方便」,
+   这条是人已经点开扔瓶、正对着一个要他去别处复制链接的输入框,是他最需要
+   「有没有更省事的办法」的时刻。所以不设捞瓶次数门槛、也不给关闭按钮 ——
+   它不遮任何东西,只占一行,而且只对装得了的人显示。 */
+#extThrow {
+  display: none; margin-top: 14px; margin-bottom: 0; padding: 10px 14px;
+  background: rgba(255, 207, 110, .08); border: 1px solid rgba(255, 207, 110, .4);
+  border-radius: 10px; font-size: 13px; line-height: 1.75; color: var(--dim);
+}
+#extThrow b { color: var(--amber); font-weight: 600; }
+#extThrow a { margin-left: 4px; color: var(--amber); font-weight: 600; white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -290,6 +301,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <h2 id="h2Throw"></h2>
     <p class="hint" id="hintThrow"></p>
     <textarea id="links"></textarea>
+    <div id="extThrow"></div>
     <details class="grab" id="grabPcBox" style="margin-top:14px; margin-bottom:0">
       <summary id="grabPcSum"></summary>
       <ol>
@@ -410,6 +422,7 @@ var I18N = {
     emptySea: "这片海还没有瓶子。<br>先扔一个，等下一个路过的人。",
     fromWho: "🧭 这瓶来自 ", seedNote: "（站里放的精选瓶）", followedNote: " · 你记住过的瓶主",
     voteGood: "🌟 收藏", fishAgain: "🎣 再捞一个", shareBtn: "📋 分享这瓶",
+    prevBottle: "⬅ 上一瓶", nextBottle: "下一瓶 ➡",
     voteDone: "🌟 已收藏",
     likedEntry: function (n) { return "⭐ 我的收藏（" + n + "）"; },
     likedHide: "收起收藏",
@@ -425,6 +438,8 @@ var I18N = {
     voteHint: "看完了回来收藏一下，好瓶子会漂给更多人",
     extNudge: '装了浏览器插件，捞一瓶就是<b>点一下工具栏</b>，不用先开这一页。YouTube 和 B站 的播放页也会多一个「装进瓶子」，看到顺手就攒上。',
     extGo: "去装一个", extNo: "不用",
+    extThrowTip: '不想来回复制粘贴？<b>装个插件</b>，YouTube、B站 的播放页下面会多一个「装进瓶子」，看到顺手按一下，攒够了一次扔出去。',
+    extThrowGo: "去装一个 →",
     extWelcome: '插件装好了。往后捞瓶<b>点浏览器右上角的 🌊 就行</b>，不用再开这一页。在 YouTube 和 B站 的播放页，播放器下面会多一个「装进瓶子」，看到想推荐的顺手按一下，攒够了在插件里一次扔出去。',
     extWelcomeOk: "知道了",
     shareText: function (lines, origin, kind) {
@@ -485,6 +500,7 @@ var I18N = {
     emptySea: "這片海還沒有瓶子。<br>先扔一個，等下一個路過的人。",
     fromWho: "🧭 這瓶來自 ", seedNote: "（站裡放的精選瓶）", followedNote: " · 你記住過的瓶主",
     voteGood: "🌟 收藏", fishAgain: "🎣 再撈一個", shareBtn: "📋 分享這瓶",
+    prevBottle: "⬅ 上一瓶", nextBottle: "下一瓶 ➡",
     voteDone: "🌟 已收藏",
     likedEntry: function (n) { return "⭐ 我的收藏（" + n + "）"; },
     likedHide: "收起收藏",
@@ -500,6 +516,8 @@ var I18N = {
     voteHint: "看完了回來收藏一下，好瓶子會漂給更多人",
     extNudge: '裝了瀏覽器擴充功能，撈一瓶就是<b>點一下工具列</b>，不用先開這一頁。YouTube 和 B站 的播放頁也會多一個「裝進瓶子」，看到順手就攢上。',
     extGo: "去裝一個", extNo: "不用",
+    extThrowTip: '不想來回複製貼上？<b>裝個擴充功能</b>，YouTube、B站 的播放頁下面會多一個「裝進瓶子」，看到順手按一下，攢夠了一次丟出去。',
+    extThrowGo: "去裝一個 →",
     extWelcome: '擴充功能裝好了。往後撈瓶<b>點瀏覽器右上角的 🌊 就行</b>，不用再開這一頁。在 YouTube 和 B站 的播放頁，播放器下面會多一個「裝進瓶子」，看到想推薦的順手按一下，攢夠了在擴充功能裡一次丟出去。',
     extWelcomeOk: "知道了",
     shareText: function (lines, origin, kind) {
@@ -560,6 +578,7 @@ var I18N = {
     emptySea: "No bottles in this sea yet.<br>Throw the first one and wait for whoever comes by.",
     fromWho: "🧭 This one is from ", seedNote: " (picked by the site)", followedNote: " · one you remembered",
     voteGood: "🌟 Save it", fishAgain: "🎣 Fish another", shareBtn: "📋 Share this one",
+    prevBottle: "⬅ Previous", nextBottle: "Next ➡",
     voteDone: "🌟 Saved",
     likedEntry: function (n) { return "⭐ Saved (" + n + ")"; },
     likedHide: "Hide saved",
@@ -575,6 +594,8 @@ var I18N = {
     voteHint: "Come back and save it if it was any good, good bottles drift to more people",
     extNudge: 'With the browser extension, fishing is <b>one click in the toolbar</b>, no need to open this page first. YouTube and Bilibili watch pages also get a bottle button, so you can collect as you go.',
     extGo: "Go get it", extNo: "No thanks",
+    extThrowTip: 'Tired of copying links back and forth? <b>Get the extension</b> and YouTube and Bilibili watch pages get a bottle button under the player — tap it as you go, throw them all at once.',
+    extThrowGo: "Get it →",
     extWelcome: 'Extension installed. From now on <b>click the 🌊 in the top right</b> to fish, this page is optional. On YouTube and Bilibili watch pages there is a bottle button under the player, tap it when you see something worth passing on and throw them all at once from the extension.',
     extWelcomeOk: "Got it",
     shareText: function (lines, origin, kind) {
@@ -644,6 +665,7 @@ function applyLang() {
   });
   $("langMenu").classList.remove("open");
   hideNudge();
+  renderExtThrow();
   renderPreview();
   $("links").dispatchEvent(new Event("input"));
   bindBookmarklet();
@@ -688,6 +710,7 @@ function switchTab(name) {
   $("tabFish").classList.toggle("on", name === "fish");
   $("panelThrow").classList.toggle("on", name === "throw");
   $("panelFish").classList.toggle("on", name === "fish");
+  if (name === "throw") renderExtThrow();
 }
 $("tabThrow").onclick = function () { switchTab("throw"); };
 // 切到捞瓶面板就直接开捞:切过来的人就是想捞的,中间没有要他决定的事,
@@ -1012,14 +1035,21 @@ $("btnThrow").onclick = function () {
 // 捞满 3 瓶还一瓶没扔的,软提示一次,可忽略继续捞;不做强制门槛
 var myBottles = null;
 var fishCount = parseInt(localStorage.getItem("yb_fishcount") || "0", 10);
+var NUDGE_COOLDOWN = 7 * 24 * 3600 * 1000;
 
 function hideNudge() { $("nudge").style.display = "none"; }
 
 function maybeNudge() {
   fishCount++;
   localStorage.setItem("yb_fishcount", String(fishCount));
-  if (fishCount < 3 || myBottles !== 0 || localStorage.getItem("yb_nudged")) return;
-  localStorage.setItem("yb_nudged", "1");
+  if (fishCount < 3 || myBottles !== 0) return;
+  // 2026-08-23 从「一辈子只弹一次」改成 7 天一次。第一次捞满 3 瓶时，人还没
+  // 觉得「这海里该有我一份」，那一下弹早了，弹早了就等于永久燄火。
+  // 老版本的 yb_nudged 存的是 "1"，parseInt 后距今远超 7 天，所以那批已经
+  // 被永久燄火的人会重新收到一次 —— 这是故意的，不是兼容事故。
+  // 插件那边同口径（extension/panel.js 的 NUDGE_COOLDOWN），两头别分家。
+  if (Date.now() - (parseInt(localStorage.getItem("yb_nudged") || "0", 10) || 0) < NUDGE_COOLDOWN) return;
+  localStorage.setItem("yb_nudged", String(Date.now()));
   var n = $("nudge");
   n.innerHTML = T.nudge
     + '<div class="row">'
@@ -1045,6 +1075,18 @@ function canInstallExt() {
   return /Chrome\/\d/.test(ua) && !/Edg(A|iOS)\//i.test(ua);
 }
 
+// 扔瓶页的插件入口。渲染时机挂在「切到扔瓶页」上,不是页面一打开就渲染:
+// 插件的 bridge.js 要等注入才打上 data-yb-ext,渲染太早会把提示塞给已经装了的人。
+function renderExtThrow() {
+  var n = $("extThrow");
+  if (!n) return;
+  if (!canInstallExt()) { n.style.display = "none"; return; }
+  n.innerHTML = T.extThrowTip
+    + '<a target="_blank" rel="noopener" href="' + EXT_STORE_THROW + '">'
+    + T.extThrowGo + "</a>";
+  n.style.display = "block";
+}
+
 function maybeExtNudge() {
   // 门槛 4 降到 2:859 个访客里 799 个只来过一天,卡在第 4 瓶等于把入口只留给会回来的人。
   // 代价是它排到了第 3 瓶那条扔瓶提示前面,两条各弹一次、各自记 localStorage,不打架
@@ -1065,6 +1107,9 @@ function maybeExtNudge() {
 // utm 是给商店后台的流量来源报表用的,好让「网页导过去多少人」能跟别的渠道分开算
 var EXT_STORE = "https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk"
   + "?utm_source=bkbottle-web&utm_medium=fish";
+// 扔瓶页那个入口单独记一档,好让商店后台看得出装机是从「正要扔瓶」来的
+// 还是从「捞得正高兴」来的 —— 这两拨人往后留不留得住,大概率不一样
+var EXT_STORE_THROW = EXT_STORE.replace("medium=fish", "medium=throw");
 
 // isStandalone 只用于捞瓶上报里的 pwa 字段(已装用户统计),装桌面提示已整体下线
 var isStandalone = false;
@@ -1075,6 +1120,13 @@ try {
 
 var lastBottle = null;
 var lastBy = "";
+
+// 「上一瓶」的回看历史。捞过的瓶原本划走就再也找不回来,而人常常是没看清、
+// 或者犹豫了一下才想回头,所以在本地留最近 20 瓶。跟收藏是两回事:收藏得点一下
+// 才存,历史是捞了就自动进;也不占 KV,服务端不需要知道谁看过什么
+var hist = [];
+try { hist = JSON.parse(localStorage.getItem("yb_hist") || "[]"); } catch (e) {}
+var histIdx = hist.length - 1;
 var liked = [];
 try { liked = JSON.parse(localStorage.getItem("yb_liked") || "[]"); } catch (e) {}
 function shareBottle() {
@@ -1339,6 +1391,60 @@ function bindBookmarklet() {
   msg.textContent = T.autofill(lines.length);
 })();
 
+// 演示捞不进历史 —— 它本来就不算捞瓶次数,也不该让人回看到还没开始的那一瓶
+function pushHist(d) {
+  hist.push({ id: d.id, by: d.by || "", followable: !!d.followable, videos: d.videos });
+  if (hist.length > 20) hist = hist.slice(-20);
+  histIdx = hist.length - 1;
+  try { localStorage.setItem("yb_hist", JSON.stringify(hist)); } catch (e) {}
+}
+
+// 往回翻不重新请求,历史整瓶都在本地,所以也不会给这瓶多记一次「被捞」
+function goHist(step) {
+  var i = histIdx + step;
+  if (i < 0 || i >= hist.length) return;
+  histIdx = i;
+  renderBottle(hist[i], false);
+  var box = $("fishResult");
+  if (box && box.scrollIntoView) box.scrollIntoView({ block: "nearest" });
+}
+
+function renderBottle(d, isDemo) {
+  var box = $("fishResult");
+  var html = "";
+  if (isDemo) html += '<div class="by">' + T.demoNote + "</div>";
+  if (d.by) {
+    var already = follow.indexOf(d.by) >= 0;
+    html += '<div class="by">' + T.fromWho + "<b>" + esc(d.by) + "</b>"
+      + (already ? T.followedNote : "")
+      + (d.followable
+        ? '<br><button class="fol" id="folBtn" onclick="toggleFollow(\'' + esc(d.by) + '\')">'
+          + (already ? T.folDone : T.folAdd) + "</button>"
+        : "")
+      + "</div>";
+  }
+  html += '<div class="vlist">';
+  d.videos.forEach(function (v) { html += videoCardHtml(v); });
+  html += "</div>"
+    + '<div class="wm">🌊 ' + T.brand + " · " + location.host + "</div>"
+    + '<div class="by">' + T.voteHint + "</div>"
+    + '<div class="fb" id="fb">'
+    + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'
+    + T.voteGood + "</button>";
+  // 演示捞那一瓶不给翻页入口;真捞的第一瓶背后没东西,也就不显示「上一瓶」
+  if (!isDemo && histIdx > 0)
+    html += '<button onclick="goHist(-1)">' + T.prevBottle + "</button>";
+  if (!isDemo && histIdx < hist.length - 1)
+    html += '<button onclick="goHist(1)">' + T.nextBottle + "</button>";
+  html += '<button onclick="doFish(false)">' + T.fishAgain + "</button>"
+    + '<button id="shareBtn" onclick="shareBottle()">' + T.shareBtn + "</button>"
+    + "</div>";
+  // 收藏和分享都读这两个,回看时必须跟着走,否则会把历史瓶收成当前那瓶
+  lastBottle = d.videos;
+  lastBy = d.by || "";
+  box.innerHTML = html;
+}
+
 function doFish(isDemo) {
   var box = $("fishResult"), msg = $("msgFish");
   msg.textContent = "";
@@ -1367,32 +1473,8 @@ function doFish(isDemo) {
         if (seen.length > 500) seen = seen.slice(-500);
         localStorage.setItem("yb_seen", JSON.stringify(seen));
       }
-      var html = "";
-      if (isDemo) html += '<div class="by">' + T.demoNote + "</div>";
-      if (d.by) {
-        var already = follow.indexOf(d.by) >= 0;
-        html += '<div class="by">' + T.fromWho + "<b>" + esc(d.by) + "</b>"
-          + (already ? T.followedNote : "")
-          + (d.followable
-            ? '<br><button class="fol" id="folBtn" onclick="toggleFollow(\'' + esc(d.by) + '\')">'
-              + (already ? T.folDone : T.folAdd) + "</button>"
-            : "")
-          + "</div>";
-      }
-      html += '<div class="vlist">';
-      d.videos.forEach(function (v) { html += videoCardHtml(v); });
-      html += "</div>"
-        + '<div class="wm">🌊 ' + T.brand + " · " + location.host + "</div>"
-        + '<div class="by">' + T.voteHint + "</div>"
-        + '<div class="fb" id="fb">'
-        + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'
-        + T.voteGood + "</button>"
-        + '<button onclick="doFish(false)">' + T.fishAgain + "</button>"
-        + '<button id="shareBtn" onclick="shareBottle()">' + T.shareBtn + "</button>"
-        + "</div>";
-      lastBottle = d.videos;
-      lastBy = d.by || "";
-      box.innerHTML = html;
+      if (!isDemo) pushHist(d);
+      renderBottle(d, isDemo);
       if (!isDemo) {   // 演示不算捞瓶次数,也不触发扔瓶提示
         maybeNudge();
         maybeExtNudge();   // 必须在 maybeNudge 之后:捞瓶计数在那里面加

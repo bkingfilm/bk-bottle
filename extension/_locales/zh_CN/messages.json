@@ -5,6 +5,8 @@
 
   "brand":          { "message": "🌊 BK漂流瓶" },
   "btnAgain":       { "message": "🎣 再捞一个" },
+  "btnPrev":        { "message": "⬅ 上一瓶" },
+  "btnNext":        { "message": "下一瓶 ➡" },
   "btnGood":        { "message": "🌟 收藏" },
   "goodDone":       { "message": "🌟 已收藏" },
   "pendingTitle":   { "message": "🍾 待扔的瓶子" },
@@ -32,6 +34,11 @@
   "footNoHistory":  { "message": "不读你的浏览记录" },
   "footStar":       { "message": "来 GitHub 点个" },
   "removeTip":      { "message": "拿出来" },
+
+  "nudge":          { "message": "🍾 你已经捞了 $N$ 瓶别人的，海里还没有你的",
+                      "placeholders": { "n": { "content": "$1", "example": "3" } } },
+  "nudgeGo":        { "message": "去扔一瓶" },
+  "nudgeLater":     { "message": "继续捞" },
 
   "rateAsk":        { "message": "用着还行的话，去商店写一句" },
   "rateGo":         { "message": "去评分" },

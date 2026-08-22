@@ -93,7 +93,24 @@
     box.parentNode.insertBefore(btn, box);
   }
 
+  // B站播放页(顶栏在内)是页面自己的脚本慢慢渲染出来的,顶栏能晚到十几秒。
+  // 在它接管完 DOM 之前就往工具栏里塞按钮,会搅乱它的渲染 —— 2026-08-20 两位
+  // 用户实测「插件开着顶栏就消失、关掉就恢复」,机器越慢越容易撞上。
+  // 所以 B站上等顶栏渲染完(#biliMainHeader 有了内容)再挂按钮;轮询每 1.2 秒
+  // 会一直重试,不会漏挂。万一顶栏本身坏了,45 秒后也放行,别让按钮跟着陪葬。
+  var t0 = Date.now();
+  function biliSettled() {
+    if (location.hostname.indexOf("bilibili.com") < 0) return true;
+    var h = document.getElementById("biliMainHeader");
+    if (!h) return true;   // 没有这个容器的版式,没有可搅乱的东西,照旧
+    // 判据用「顶栏里有搜索框」而不是「有子元素」:空壳期是 0 个子元素,
+    // 但渲染中途可能先塞骨架占位,光数子元素会提前放行
+    if (h.querySelector("input")) return true;
+    return Date.now() - t0 > 45000;
+  }
+
   function mount() {
+    if (!biliSettled()) return;
     if (location.hostname === "steamcommunity.com") { mountSteamProfile(); return; }
     var item = currentItem();
     var old = document.getElementById(BTN_ID);
