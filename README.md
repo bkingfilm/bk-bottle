@@ -7,7 +7,7 @@
 **线上：https://b.bking.film**
 **Chrome 插件：[Chrome 应用商店](https://chromewebstore.google.com/detail/ahbgoaaojaanogcampbekjmiocmnnbbk)**（点工具栏就是一次捞瓶，不用先打开网页）
 
-支持 YouTube（视频和播放列表）和 B站，一个瓶子里可以混着装。
+支持 YouTube（视频和播放列表）、B站，以及 Steam 游戏（2026-08-10 起），一个瓶子里可以混着装。界面有简体、繁体、英文三种。
 
 ![捞到一瓶陌生人的片单](docs/screenshot.png)
 
@@ -30,9 +30,19 @@
 
 `extension/` 里是插件版：点工具栏那个瓶子就是一次捞瓶，YouTube 和 B站 的播放页多一个「装进瓶子」。界面文案在 `extension/_locales/`，目前有简体中文和英文两份。
 
-权限只要 `storage` 加三个域名，没有 `history`、没有 `tabs`、没有 `<all_urls>` —— 上面那条「不读你的浏览记录」在插件里也算数，虽然插件确实有这个 API。
+权限只要 `storage` 加三个域名，没有 `history`、没有 `tabs`、没有 `<all_urls>` ， 上面那条「不读你的浏览记录」在插件里也算数，虽然插件确实有这个 API。
 
 **也不接管你的新标签页。** 2026-07-28 加过一次，理由是回访，当天被否掉：改别人的新标签页等于把人家主页换了，而且跟这产品的立意直接冲突。这条是硬红线，`extension/check.py` 里有检查守着。装载和上架说明见 [extension/README.md](extension/README.md)。
+
+## Steam 游戏瓶
+
+2026-08-10 起，瓶子里除了视频还能装「最近在玩的游戏」。三个入口：
+
+- 网页里直接贴 Steam 商店链接；
+- 书签脚本：在自己的 Steam 资料页点一下，把「最近活动」区块里的游戏一键装进瓶子（只认 `.recent_games` 区块，商店推荐位不算，否则 Steam 首页的推荐会被当成你在玩的）；
+- Chrome 插件 0.1.9 起：商店页多一个「装进瓶子」，资料页可以一键装最近在玩。
+
+卡片只有封面、名字和「TA 在玩」三样，没有价格、没有促销、没有购买按钮。游戏资料由服务端调 Steam `appdetails` 验证，验证不通过的一律拒收，不回落客户端提供的标题。成人向游戏按 Steam 官方 `content_descriptors` 判定后隐藏。
 
 ## 怎么实现的
 
