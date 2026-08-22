@@ -86,3 +86,11 @@
 九条动作全部完成：X 主帖+补链、Threads 主贴+补链、B站动态+补链（BK 本人手发）、知乎想法+补链、Discord。
 唯一异常＝B站撞车，多发的那条已删除，线上只剩 BK 手发的一条。
 朋友圈那条不在本任务渠道清单里，稿已在对话里给 BK，等他手发。
+
+## 2026-08-23 · 阮一峰周刊自荐
+
+| 渠道 | 状态 | 直链 | 发布时间 |
+| --- | --- | --- | --- |
+| ruanyf/weekly 自荐 issue（【网站自荐】，带 ?from=ruanyf） | 发布成功 | https://github.com/ruanyf/weekly/issues/11311 | 2026-08-23 03:4x |
+
+同班：README 补 Steam 瓶与三语说明（commit 48ca03d）、仓库 homepage 填 b.bking.film。周刊周五发刊，选没选中看第 410 期；渠道表看 `ruanyf` 来源人数。HelloGitHub 等这期结果再决定。
