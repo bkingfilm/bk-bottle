@@ -1,5 +1,12 @@
 # 上架材料（Edge / Chrome 商店）
 
+## 📌 0.2.3 提交记录（2026-09-12 10:2x~10:3x，bk-bottle-growth 补跑班代传）
+
+- **Edge Partner Center ✅ 已提交，状态 In review**（10:33 页面实读「UPDATE - BK漂流瓶 - 视频与游戏交换 Version 0.2.3 / In review / Expect to hear back from us in 7 business days」，0.2.2 仍 Live）。流程：Update → 上传 `dist/bk-bottle-0.2.3.zip`（校验 Complete，权限与 0.2.2 完全一致）→ Availability/Properties/Privacy/Store listings 一路 Save & Continue 未改任何内容 → Testers 选 **No** → 贴审核备注 → Publish。
+  - **✅ 2026-09-20 01:16 Edge 已过审上架**：`getproductdetailsbycrxid` 接口实读 `version` 0.2.3（上周日 09-14 还是 0.2.2），activeInstallCount 0、评分 5.0（1 条）。Edge 那半到此结案。
+- **Chrome Web Store 🟠 未提交**。打开 `chrome.google.com/webstore/devconsole` 被 Google 拦到「验证身份」页（chozuihei@gmail.com，要求重新登录）。按红线未自行登录、未重试。**待 BK 在本机 Chrome 登一次 Google 后补传**，item `ahbgoaaojaanogcampbekjmiocmnnbbk`。
+- **审核备注用的是裁剪版**：`CERT-NOTES.txt` 原文 2412 字符超出 Edge 的 2000 上限，删去已过审的 v0.2.2 历史段与两处示例链接后为 1936 字符，实际提交那份存为 `CERT-NOTES-0.2.3-submitted.txt`，Chrome 补传直接用它。
+
 ## 0.2.3：插件里补上扔瓶引导（2026-08-23）
 
 BK 08-22 晚问「捞3个 扔一个这个提示还在吗」。**查下来：网页还在，插件从来没有过。**

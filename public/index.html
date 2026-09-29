@@ -271,6 +271,28 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
 }
 #extThrow b { color: var(--amber); font-weight: 600; }
 #extThrow a { margin-left: 4px; color: var(--amber); font-weight: 600; white-space: nowrap; }
+/* 回赠(2026-09-29):捞到这瓶的人放回来的一条,和「放一条回去」的输入框。
+   只收链接不收字,所以它不是留言板;冷一档,别跟瓶子本身抢眼 */
+.rep { margin-top: 16px; }
+.rep .rt { color: var(--dim); font-size: 12px; margin-bottom: 8px; text-align: center; }
+.rby { color: var(--dim); font-size: 12px; margin: 10px 0 4px; }
+.rep-form { margin-top: 16px; padding: 12px 14px; border: 1px dashed var(--line); border-radius: 12px; }
+.rep-form .hint { margin-bottom: 8px; }
+.rep-form input[type=text] { margin-top: 0; }
+.rep-form .fb { margin-top: 10px; }
+/* 扔瓶成功后的那条链接:能发出去的东西 */
+.linkbox { margin-top: 10px; font-size: 13px; color: var(--dim); line-height: 1.8; }
+.linkbox .lnk { color: var(--glow); word-break: break-all; }
+/* 我扔过的瓶子:每瓶一行,带链接和别人放回来的东西 */
+#myBottles { margin-top: 14px; }
+#myBottles:empty { margin: 0; }
+.mb-title { color: var(--dim); font-size: 12px; text-align: center; margin-bottom: 8px; }
+.mb { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 8px 10px; margin-bottom: 8px; font-size: 13px; }
+.mb-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.mb-t { flex: 1; min-width: 120px; color: var(--ink); line-height: 1.5; }
+.mb-s { color: var(--amber); font-size: 12px; white-space: nowrap; }
+.mb .vlist { margin-top: 8px; }
+.mb .fol { margin-top: 0; }
 </style>
 </head>
 <body>
@@ -324,6 +346,7 @@ details.grab ol { margin: 10px 0 4px 20px; color: var(--dim); line-height: 2; }
     <button class="big" id="btnThrow" disabled></button>
     <div class="msg" id="msgThrow"></div>
     <div class="me" id="myName"></div>
+    <div id="myBottles"></div>
   </div>
 
   <div id="panelFish" class="panel on">
@@ -442,13 +465,31 @@ var I18N = {
     extThrowGo: "去装一个 →",
     extWelcome: '插件装好了。往后捞瓶<b>点浏览器右上角的 🌊 就行</b>，不用再开这一页。在 YouTube 和 B站 的播放页，播放器下面会多一个「装进瓶子」，看到想推荐的顺手按一下，攒够了在插件里一次扔出去。',
     extWelcomeOk: "知道了",
-    shareText: function (lines, origin, kind) {
+    shareText: function (lines, link, kind) {
       var head = kind === "g" ? "🍾 捞到一瓶陌生人最近在玩的游戏："
         : kind === "m" ? "🍾 捞到一瓶陌生人在看的视频、在玩的游戏："
         : "🍾 捞到一瓶陌生人正在看的片单：";
       return head + "\n" + lines
-        + "\n\n这是 BK漂流瓶，大家把自己真实在看在玩的东西扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，来捞一瓶：" + origin;
+        + "\n\n这是 BK漂流瓶，大家把自己真实在看在玩的东西扔进海里匿名交换，专门用来看看信息茧房外面长什么样\n\n不用注册，打开就是这一瓶：" + link;
     },
+    sharedHead: function (by) { return "🔗 有人把这瓶分享给你，是 <b>" + by + "</b> 扔的"; },
+    ownBottle: "🍾 这是你自己扔的瓶子",
+    gone: "这个瓶子已经漂远了，捞不到了。<br>海里还有很多别的。",
+    goneFish: "🎣 捞一个别的",
+    fishMine: "🎣 捞一个你的",
+    replyTitle: "🫧 捞到这瓶的人放回来的",
+    replyBy: function (by) { return by + " 放回来的"; },
+    replyHint: "看完想回一条？放一条你正在看的视频或在玩的游戏进这个瓶子，扔瓶的人回来会看到。不能写字，只能放链接。",
+    replyPh: "贴一条链接，YouTube、B站、Steam 都行",
+    replyBtn: "放回瓶子里",
+    replySealing: "正在核对这条链接…",
+    replyDone: "✅ 放进去了，扔瓶的人回来就能看到",
+    replyFail: "没放进去，再试一次",
+    myBottlesTitle: "🍾 你扔过的瓶子",
+    copyLink: "🔗 复制链接", linkCopied: "✅ 已复制",
+    thrownLink: "这瓶有自己的链接，发给朋友就能直接打开：",
+    myReplies: function (n) { return "↩ " + n + " 条放回来的"; },
+    cheerReply: function (n) { return "🫧 你不在的时候，有 " + n + " 个人往你的瓶子里放了视频<br>到扔瓶页看看是什么"; },
   },
   tw: {
     brand: "BK漂流瓶",
@@ -520,13 +561,31 @@ var I18N = {
     extThrowGo: "去裝一個 →",
     extWelcome: '擴充功能裝好了。往後撈瓶<b>點瀏覽器右上角的 🌊 就行</b>，不用再開這一頁。在 YouTube 和 B站 的播放頁，播放器下面會多一個「裝進瓶子」，看到想推薦的順手按一下，攢夠了在擴充功能裡一次丟出去。',
     extWelcomeOk: "知道了",
-    shareText: function (lines, origin, kind) {
+    shareText: function (lines, link, kind) {
       var head = kind === "g" ? "🍾 撈到一瓶陌生人最近在玩的遊戲："
         : kind === "m" ? "🍾 撈到一瓶陌生人在看的影片、在玩的遊戲："
         : "🍾 撈到一瓶陌生人正在看的片單：";
       return head + "\n" + lines
-        + "\n\n這是 BK漂流瓶，大家把自己真實在看在玩的東西扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，來撈一瓶：" + origin;
+        + "\n\n這是 BK漂流瓶，大家把自己真實在看在玩的東西扔進海裡匿名交換，專門用來看看同溫層外面長什麼樣\n\n不用註冊，打開就是這一瓶：" + link;
     },
+    sharedHead: function (by) { return "🔗 有人把這瓶分享給你，是 <b>" + by + "</b> 扔的"; },
+    ownBottle: "🍾 這是你自己扔的瓶子",
+    gone: "這個瓶子已經漂遠了，撈不到了。<br>海裡還有很多別的。",
+    goneFish: "🎣 撈一個別的",
+    fishMine: "🎣 撈一個你的",
+    replyTitle: "🫧 撈到這瓶的人放回來的",
+    replyBy: function (by) { return by + " 放回來的"; },
+    replyHint: "看完想回一條？放一條你正在看的影片或在玩的遊戲進這個瓶子，扔瓶的人回來會看到。不能寫字，只能放連結。",
+    replyPh: "貼一條連結，YouTube、B站、Steam 都行",
+    replyBtn: "放回瓶子裡",
+    replySealing: "正在核對這條連結…",
+    replyDone: "✅ 放進去了，扔瓶的人回來就能看到",
+    replyFail: "沒放進去，再試一次",
+    myBottlesTitle: "🍾 你扔過的瓶子",
+    copyLink: "🔗 複製連結", linkCopied: "✅ 已複製",
+    thrownLink: "這瓶有自己的連結，發給朋友就能直接打開：",
+    myReplies: function (n) { return "↩ " + n + " 條放回來的"; },
+    cheerReply: function (n) { return "🫧 你不在的時候，有 " + n + " 個人往你的瓶子裡放了影片<br>到扔瓶頁看看是什麼"; },
   },
   en: {
     brand: "BK Bottle",
@@ -598,13 +657,31 @@ var I18N = {
     extThrowGo: "Get it →",
     extWelcome: 'Extension installed. From now on <b>click the 🌊 in the top right</b> to fish, this page is optional. On YouTube and Bilibili watch pages there is a bottle button under the player, tap it when you see something worth passing on and throw them all at once from the extension.',
     extWelcomeOk: "Got it",
-    shareText: function (lines, origin, kind) {
+    shareText: function (lines, link, kind) {
       var head = kind === "g" ? "🍾 Fished out a bottle of what a stranger is playing:"
         : kind === "m" ? "🍾 Fished out a bottle of what a stranger is watching and playing:"
         : "🍾 Fished out a bottle of what a stranger is watching:";
       return head + "\n" + lines
-        + "\n\nThis is BK Bottle, people drop what they are really watching and playing into the sea and swap it anonymously, just to see what is outside their own bubble\n\nNo signup, go pull one out: " + origin;
+        + "\n\nThis is BK Bottle, people drop what they are really watching and playing into the sea and swap it anonymously, just to see what is outside their own bubble\n\nNo signup, this link opens the bottle: " + link;
     },
+    sharedHead: function (by) { return "🔗 Somebody shared this bottle with you, it was thrown by <b>" + by + "</b>"; },
+    ownBottle: "🍾 This is a bottle you threw",
+    gone: "This bottle has drifted too far to reach.<br>Plenty of others out there.",
+    goneFish: "🎣 Fish out another one",
+    fishMine: "🎣 Fish out one for me",
+    replyTitle: "🫧 Put back by people who fished this bottle",
+    replyBy: function (by) { return "put back by " + by; },
+    replyHint: "Want to answer? Drop one video or game you are into back into this bottle, the person who threw it will see it when they come back. Links only, no words.",
+    replyPh: "Paste one link, YouTube, Bilibili or Steam",
+    replyBtn: "Put it back in",
+    replySealing: "Checking that link…",
+    replyDone: "✅ In the bottle, the thrower will see it when they come back",
+    replyFail: "That did not go in, try again",
+    myBottlesTitle: "🍾 Bottles you threw",
+    copyLink: "🔗 Copy link", linkCopied: "✅ Copied",
+    thrownLink: "This bottle has its own link, send it to a friend and it opens right there:",
+    myReplies: function (n) { return "↩ " + n + " put back"; },
+    cheerReply: function (n) { return "🫧 While you were gone, " + n + " people put videos back into your bottle<br>Check the throw tab to see them"; },
   },
 };
 
@@ -755,14 +832,46 @@ function refreshMine() {
       };
 
       var last = localStorage.getItem("yb_lastgood");
-      if (last !== null && d.good > parseInt(last, 10)) {
+      var cheers = [];
+      if (last !== null && d.good > parseInt(last, 10)) cheers.push(T.cheer(d.good - parseInt(last, 10)));
+      localStorage.setItem("yb_lastgood", String(d.good || 0));
+      // 回赠的回执同一口径:回来才看见,不推不弹,只在自己的页上说一声
+      var lastR = localStorage.getItem("yb_lastreplies");
+      var nr = d.replies || 0;
+      if (lastR !== null && nr > parseInt(lastR, 10)) cheers.push(T.cheerReply(nr - parseInt(lastR, 10)));
+      localStorage.setItem("yb_lastreplies", String(nr));
+      if (cheers.length) {
         var c = $("cheer");
-        c.innerHTML = T.cheer(d.good - parseInt(last, 10));
+        c.innerHTML = cheers.join("<br>");
         c.style.display = "block";
       }
-      localStorage.setItem("yb_lastgood", String(d.good || 0));
+      drawMyBottles(d.list || []);
     })
     .catch(function () {});
+}
+
+// 我扔过的瓶子:每瓶一条能发出去的链接,和别人放回来的东西。放在扔瓶页底下,
+// 只有扔过瓶的人才看得到,不扔就不占位置
+function drawMyBottles(list) {
+  var el = $("myBottles");
+  if (!el) return;
+  if (!list.length) { el.innerHTML = ""; return; }
+  var h = '<div class="mb-title">' + T.myBottlesTitle + "</div>";
+  list.forEach(function (b) {
+    var link = location.origin + "/b/" + b.stamp;
+    var reps = b.replies || [];
+    h += '<div class="mb"><div class="mb-row"><span class="mb-t">' + esc(b.first || "")
+      + (b.n > 1 ? " <span style=\"color:var(--dim)\">+" + (b.n - 1) + "</span>" : "") + "</span>"
+      + '<span class="mb-s">' + (b.g ? "🌟 " + b.g + " " : "") + (reps.length ? T.myReplies(reps.length) : "") + "</span>"
+      + '<button class="fol" onclick="copyText(\'' + esc(link) + '\', this)">' + T.copyLink + "</button></div>";
+    if (reps.length) {
+      h += '<div class="vlist">';
+      reps.forEach(function (r) { h += '<div class="rby">' + esc(T.replyBy(r.by)) + "</div>" + videoCardHtml(r.v || {}); });
+      h += "</div>";
+    }
+    h += "</div>";
+  });
+  el.innerHTML = h;
 }
 
 var ID_PATTERNS = [
@@ -1014,6 +1123,19 @@ $("btnThrow").onclick = function () {
       if (d.ok) {
         msg.className = "msg ok";
         msg.textContent = T.thrown(d.count);
+        if (d.id) {
+          // 扔完就给链接:这是他最想把它发出去的一刻。同时把这瓶的内容留在本地,
+          // 自己打开自己的链接时用本地副本渲染(隔离区的瓶子外面打不开,自己看还是正常的)
+          var link = location.origin + "/b/" + d.id;
+          rememberMine(d.id, currentItems().map(function (it) {
+            var c = pvCache[pvKey(it)] || {};
+            return { vid: it.vid, list: it.list, bvid: it.bvid, appid: it.appid,
+              title: c.title || "", author: c.author || "", thumb: c.thumb || "" };
+          }));
+          msg.innerHTML = esc(T.thrown(d.count)) + '<div class="linkbox">' + T.thrownLink
+            + '<br><span class="lnk">' + esc(link) + "</span> "
+            + '<button class="fol" onclick="copyText(\'' + esc(link) + '\', this)">' + T.copyLink + "</button></div>";
+        }
         $("links").value = ""; $("parsed").textContent = "0";
         try { localStorage.removeItem("yb_draft"); } catch (e) {}
         renderPreview();
@@ -1120,6 +1242,7 @@ try {
 
 var lastBottle = null;
 var lastBy = "";
+var lastId = "";
 
 // 「上一瓶」的回看历史。捞过的瓶原本划走就再也找不回来,而人常常是没看清、
 // 或者犹豫了一下才想回头,所以在本地留最近 20 瓶。跟收藏是两回事:收藏得点一下
@@ -1135,10 +1258,19 @@ function shareBottle() {
   var hasGame = lastBottle.some(function (v) { return v.appid; });
   var hasVideo = lastBottle.some(function (v) { return !v.appid; });
   var kind = hasGame && hasVideo ? "m" : hasGame ? "g" : "v";
-  var text = T.shareText(lines.join("\n"), location.origin, kind);
+  // 分享带的是这一瓶自己的链接(/b/<stamp>),点开就是这瓶,不是首页。
+  // 没有 id 的(旧历史记录)退回首页地址
+  var link = lastId && lastId.indexOf("b:") === 0
+    ? location.origin + "/b/" + lastId.slice(2) : location.origin;
+  var text = T.shareText(lines.join("\n"), link, kind);
   function done() {
     var b = document.getElementById("shareBtn");
     if (b) b.textContent = T.shareOk;
+  }
+  // 手机上直接拉系统分享面板,发到哪个 App 由他自己挑;取消了就当没点过
+  if (navigator.share && /Mobile|Android|iPhone|iPad/i.test(navigator.userAgent || "")) {
+    navigator.share({ text: text }).then(done).catch(function () {});
+    return;
   }
   function fallback() {
     var ta = document.createElement("textarea");
@@ -1178,6 +1310,123 @@ function copyAddr() {
   } else {
     fallback();
   }
+}
+
+// 通用复制:按钮文字换成「已复制」一下再换回来
+function copyText(text, btn) {
+  var old = btn ? btn.textContent : "";
+  function done() {
+    if (!btn) return;
+    btn.textContent = T.linkCopied;
+    setTimeout(function () { btn.textContent = old; }, 1600);
+  }
+  function fallback() {
+    var ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    done();
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(done).catch(fallback);
+  } else {
+    fallback();
+  }
+}
+
+// 自己扔过的瓶子留本地副本(stamp + 内容),最多 10 瓶。两个用处:打开自己的链接时
+// 认出「这是我的」;瓶子进了隔离区外面打不开,自己看还是用这份副本正常显示
+function myStamps() {
+  try { return JSON.parse(localStorage.getItem("yb_mybottles") || "[]"); } catch (e) { return []; }
+}
+function rememberMine(stamp, videos) {
+  var arr = myStamps().filter(function (x) { return x.s !== stamp; });
+  arr.push({ s: stamp, v: videos || [] });
+  if (arr.length > 10) arr = arr.slice(-10);
+  try { localStorage.setItem("yb_mybottles", JSON.stringify(arr)); } catch (e) {}
+}
+
+// 回赠过的瓶子记本地,表单不再出现;服务端另有一设备一瓶一条的硬限
+function repliedTo(bid) {
+  try { return JSON.parse(localStorage.getItem("yb_replied") || "[]").indexOf(bid) >= 0; } catch (e) { return false; }
+}
+function markReplied(bid) {
+  var arr = [];
+  try { arr = JSON.parse(localStorage.getItem("yb_replied") || "[]"); } catch (e) {}
+  if (arr.indexOf(bid) < 0) arr.push(bid);
+  if (arr.length > 200) arr = arr.slice(-200);
+  try { localStorage.setItem("yb_replied", JSON.stringify(arr)); } catch (e) {}
+}
+
+function replyCardsHtml(reps) {
+  var h = '<div class="rep"><div class="rt">' + T.replyTitle + "</div>";
+  reps.forEach(function (r) {
+    h += '<div class="rby">' + esc(T.replyBy(r.by || "")) + "</div>" + videoCardHtml(r.v || {});
+  });
+  return h + "</div>";
+}
+
+// 瓶子底下的回赠区:先列别人放回来的,再给一个「放一条回去」的框。
+// 演示瓶、自己的瓶、已经放过的瓶不给框
+function repliesHtml(d, isDemo, own) {
+  var reps = d.replies || [];
+  var html = reps.length ? replyCardsHtml(reps) : "";
+  if (isDemo || own || !d.id || repliedTo(d.id)) return html;
+  html += '<div class="rep-form" id="repForm"><div class="hint">' + T.replyHint + "</div>"
+    + '<input type="text" id="replyIn" placeholder="' + esc(T.replyPh) + '">'
+    + '<div class="fb"><button id="replyBtn" onclick="sendReply(\'' + esc(d.id) + '\')">' + T.replyBtn + "</button></div>"
+    + '<div class="msg" id="msgReply"></div></div>';
+  return html;
+}
+
+function sendReply(bid) {
+  var inp = $("replyIn"), msg = $("msgReply"), btn = $("replyBtn");
+  if (!inp || !msg || !btn) return;
+  var ids = parseIds(inp.value);
+  if (!ids.vids.length && !ids.lists.length && !ids.bilis.length && !ids.steams.length) {
+    msg.className = "msg err"; msg.textContent = T.replyFail; return;
+  }
+  btn.disabled = true;
+  msg.className = "msg"; msg.textContent = T.replySealing;
+  var payload = { bottle: bid, device: device,
+    videos: ids.vids.slice(0, 1), lists: ids.lists.slice(0, 1), bilis: [],
+    steams: ids.steams.slice(0, 1).map(function (s) { return { id: s, title: "", thumb: "" }; }) };
+  // B站 标题只能在浏览器里 JSONP 拿,和扔瓶一样先取到再发
+  var pre = (!ids.vids.length && !ids.lists.length && ids.bilis.length)
+    ? biliJsonp(ids.bilis[0]).then(function (b) { if (b) payload.bilis = [b]; })
+    : Promise.resolve();
+  pre.then(function () {
+    return fetch("/api/reply", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (!d.ok) {
+      msg.className = "msg err"; msg.textContent = d.error || T.replyFail;
+      btn.disabled = false;
+      return;
+    }
+    markReplied(bid);
+    // 把自己放的那条接到列表末尾,历史里的这一瓶也同步,回看时还在
+    var h = hist[histIdx];
+    if (h && h.id === bid) {
+      h.replies = (h.replies || []).concat([{ by: d.by, v: d.v }]);
+      try { localStorage.setItem("yb_hist", JSON.stringify(hist)); } catch (e) {}
+    }
+    var form = $("repForm");
+    var box = form && form.parentNode;
+    var existing = box ? box.querySelector(".rep") : null;
+    var mine = '<div class="rby">' + esc(T.replyBy(d.by || "")) + "</div>" + videoCardHtml(d.v || {})
+      + '<div class="msg ok">' + T.replyDone + "</div>";
+    if (existing) { existing.insertAdjacentHTML("beforeend", mine); form.remove(); }
+    else if (form) form.outerHTML = '<div class="rep"><div class="rt">' + T.replyTitle + "</div>" + mine + "</div>";
+  }).catch(function () {
+    msg.className = "msg err"; msg.textContent = T.netErr;
+    btn.disabled = false;
+  });
 }
 
 function refreshFolCount() {
@@ -1393,7 +1642,8 @@ function bindBookmarklet() {
 
 // 演示捞不进历史 —— 它本来就不算捞瓶次数,也不该让人回看到还没开始的那一瓶
 function pushHist(d) {
-  hist.push({ id: d.id, by: d.by || "", followable: !!d.followable, videos: d.videos });
+  hist.push({ id: d.id, by: d.by || "", followable: !!d.followable, videos: d.videos,
+    replies: d.replies || [] });
   if (hist.length > 20) hist = hist.slice(-20);
   histIdx = hist.length - 1;
   try { localStorage.setItem("yb_hist", JSON.stringify(hist)); } catch (e) {}
@@ -1409,13 +1659,17 @@ function goHist(step) {
   if (box && box.scrollIntoView) box.scrollIntoView({ block: "nearest" });
 }
 
-function renderBottle(d, isDemo) {
+// opts.shared:从 /b/ 链接打开的别人的瓶;opts.own:自己扔的瓶(不给收藏和回赠框)
+function renderBottle(d, isDemo, opts) {
+  opts = opts || {};
   var box = $("fishResult");
   var html = "";
   if (isDemo) html += '<div class="by">' + T.demoNote + "</div>";
-  if (d.by) {
+  if (opts.own) {
+    html += '<div class="by">' + T.ownBottle + "</div>";
+  } else if (d.by) {
     var already = follow.indexOf(d.by) >= 0;
-    html += '<div class="by">' + T.fromWho + "<b>" + esc(d.by) + "</b>"
+    html += '<div class="by">' + (opts.shared ? T.sharedHead(esc(d.by)) : T.fromWho + "<b>" + esc(d.by) + "</b>")
       + (already ? T.followedNote : "")
       + (d.followable
         ? '<br><button class="fol" id="folBtn" onclick="toggleFollow(\'' + esc(d.by) + '\')">'
@@ -1427,21 +1681,23 @@ function renderBottle(d, isDemo) {
   d.videos.forEach(function (v) { html += videoCardHtml(v); });
   html += "</div>"
     + '<div class="wm">🌊 ' + T.brand + " · " + location.host + "</div>"
-    + '<div class="by">' + T.voteHint + "</div>"
-    + '<div class="fb" id="fb">'
-    + '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">'
-    + T.voteGood + "</button>";
+    + repliesHtml(d, isDemo, opts.own);
+  if (!opts.own) html += '<div class="by">' + T.voteHint + "</div>";
+  html += '<div class="fb" id="fb">';
+  if (!opts.own)
+    html += '<button id="goodBtn" onclick="vote(\'' + esc(d.id) + '\',\'good\')">' + T.voteGood + "</button>";
   // 演示捞那一瓶不给翻页入口;真捞的第一瓶背后没东西,也就不显示「上一瓶」
   if (!isDemo && histIdx > 0)
     html += '<button onclick="goHist(-1)">' + T.prevBottle + "</button>";
   if (!isDemo && histIdx < hist.length - 1)
     html += '<button onclick="goHist(1)">' + T.nextBottle + "</button>";
-  html += '<button onclick="doFish(false)">' + T.fishAgain + "</button>"
+  html += '<button onclick="doFish(false)">' + ((opts.shared || opts.own) ? T.fishMine : T.fishAgain) + "</button>"
     + '<button id="shareBtn" onclick="shareBottle()">' + T.shareBtn + "</button>"
     + "</div>";
-  // 收藏和分享都读这两个,回看时必须跟着走,否则会把历史瓶收成当前那瓶
+  // 收藏和分享都读这几个,回看时必须跟着走,否则会把历史瓶收成当前那瓶
   lastBottle = d.videos;
   lastBy = d.by || "";
+  lastId = d.id || "";
   box.innerHTML = html;
 }
 
@@ -1522,9 +1778,40 @@ if (location.hash === "#throw") {
   n.style.display = "block";
 })();
 
+// 从 /b/<stamp> 链接进来的:页面 head 里由 Worker 注入了这一瓶。直接摆在捞瓶页,
+// 底下是「捞一个你的」。漂远了的(隔离/已删)统一一句话,自己扔的用本地副本照常显示
+(function openShared() {
+  var B = window.__BOTTLE__;
+  if (!B) return;
+  switchTab("fish");
+  var mine = myStamps();
+  var local = null;
+  mine.forEach(function (x) { if (x.s === B.stamp) local = x; });
+  if (B.gone) {
+    if (local && local.v && local.v.length) {
+      renderBottle({ id: "b:" + B.stamp, by: nickname(device), videos: local.v, replies: [] }, false, { own: true });
+    } else {
+      $("fishResult").innerHTML = '<div id="fishEmpty">' + T.gone + "</div>"
+        + '<button class="big" onclick="doFish(false)">' + T.goneFish + "</button>";
+    }
+    return;
+  }
+  var own = !!local || (B.by && B.by === nickname(device));
+  var d = { id: B.id, by: B.by, videos: B.videos || [], replies: B.replies || [],
+    followable: !own && !B.seed };
+  if (!own && d.id && seen.indexOf(d.id) < 0) {
+    seen.push(d.id);
+    if (seen.length > 500) seen = seen.slice(-500);
+    localStorage.setItem("yb_seen", JSON.stringify(seen));
+  }
+  pushHist(d);
+  renderBottle(d, false, own ? { own: true } : { shared: true });
+})();
+
 // 首访自动捞一网演示:新人 3 秒看懂这是什么。只演一次,不计任何统计;
-// 带分享/书签参数进来的人有明确目的,不打断
+// 带分享/书签参数进来的人有明确目的,不打断;从瓶子链接进来的已经有一瓶在眼前
 (function demoFish() {
+  if (window.__BOTTLE__) { localStorage.setItem("yb_demo_done", "1"); return; }
   if (!firstVisit || localStorage.getItem("yb_demo_done")) return;
   if (location.hash || /[?&](share|text|title)=/.test(location.search)) return;
   localStorage.setItem("yb_demo_done", "1");

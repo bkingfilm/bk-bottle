@@ -145,6 +145,11 @@ const STEAM_RE = /^\d{1,7}$/;
 const STEAM_IMG_RE = /^https:\/\/[a-z0-9.-]+\.steamstatic\.com\//;
 const THROWS_PER_DAY = 5;
 const MAX_BODY = 16384;
+// 回赠(2026-09-29):捞到瓶子的人往这瓶里放回一条视频/游戏。不许写字,只许放链接,
+// 走扔瓶同一套验证与影子丢弃,所以它不是留言板。每瓶封顶 20 条、每设备每瓶 1 条、每 IP 每日 10 条
+const REPLIES_PER_DAY = 10;
+const MAX_REPLIES = 20;
+const STAMP_RE = /^\d{10,24}$/;
 
 // 命中即影子删除:扔瓶人看到正常成功,瓶子存进 q: 隔离区,永不出现在捞瓶池。
 // 简繁双版本;宁可误伤不可漏放。
@@ -491,7 +496,140 @@ async function handleThrow(req, reqUrl, env) {
   // t 存进 metadata,捞瓶加权时不必读正文就能判断新旧
   await env.BOTTLES.put(id, JSON.stringify(bottle), { metadata: { d: device, g: 0, b: 0, p, t: nowSec } });
   invalidateIndex();  // 新瓶必须马上能被别人捞到
-  return json({ ok: true, count: valid.length });
+  // 返回 stamp 给扔瓶人一条能发出去的链接(/b/<stamp>)。隔离瓶也照返:前端会把自己扔的瓶子
+  // 存在本地,打开自己的链接时用本地副本渲染,所以扔瓶人看不出这瓶进了隔离区
+  return json({ ok: true, count: valid.length, id: stamp });
+}
+
+// 回赠列表的对外形态:只给代号,不给 device
+function publicReplies(bottle) {
+  const reps = Array.isArray(bottle.replies) ? bottle.replies : [];
+  return reps.map((r) => ({ by: nickname(r.d), v: r.v, t: r.t || 0 }));
+}
+
+async function handleReply(req, reqUrl, env) {
+  const body = await readBody(req, reqUrl);
+  if (body.err) return body.err;
+  const bid = String(body.data.bottle || "").slice(0, 32);
+  const device = String(body.data.device || "").slice(0, 64);
+  if (!/^b:\d{10,24}$/.test(bid) || !device) return json({ error: "参数不对" }, 400);
+
+  const ip = req.headers.get("CF-Connecting-IP") || "unknown";
+  const day = new Date().toISOString().slice(0, 10);
+  const rlKey = `rr:${ip}:${day}`;
+  const used = parseInt((await env.BOTTLES.get(rlKey)) || "0", 10);
+  if (used >= REPLIES_PER_DAY) return json({ error: "今天放得够多了，明天再来" }, 429);
+
+  // 只收一条:按 YouTube 视频 / 清单 / B站 / Steam 的顺序取第一条有效的
+  const vids = (Array.isArray(body.data.videos) ? body.data.videos : []).filter((v) => typeof v === "string" && VID_RE.test(v));
+  const lists = (Array.isArray(body.data.lists) ? body.data.lists : []).filter((x) => typeof x === "string" && LIST_RE.test(x));
+  const bilis = sanitizeBilis(body.data.bilis);
+  const steams = sanitizeSteams(body.data.steams);
+  let item = null, adult = false;
+  if (vids.length) {
+    const [t, a] = await fetchMeta(vids[0]);
+    if (t) item = { vid: vids[0], title: t, author: a || "" };
+  } else if (lists.length) {
+    const [t, a, th] = await fetchListMeta(lists[0]);
+    if (t) item = { list: lists[0], title: t, author: a || "", thumb: th || "" };
+  } else if (bilis.length) {
+    item = bilis[0];
+  } else if (steams.length) {
+    const m = await fetchSteamMeta(steams[0].appid);
+    if (!m.missing && !m.fail) {
+      item = { appid: steams[0].appid, title: m.title, author: "", thumb: m.thumb || steams[0].thumb };
+      adult = !!m.adult;
+    }
+  }
+  if (!item) return json({ error: "这条链接在 YouTube/B站/Steam 上找不到对应内容" }, 400);
+
+  const got = await env.BOTTLES.getWithMetadata(bid);
+  if (!got.value) return json({ error: "这个瓶子已经漂远了" }, 404);
+  const bottle = JSON.parse(got.value);
+  if (bottle.device === device) return json({ error: "这是你自己的瓶子" }, 400);
+  const replies = Array.isArray(bottle.replies) ? bottle.replies : [];
+  if (replies.some((r) => r.d === device)) return json({ error: "你已经往这瓶放过一条了" }, 400);
+  if (replies.length >= MAX_REPLIES) return json({ error: "这瓶已经装满了" }, 400);
+
+  await env.BOTTLES.put(rlKey, String(used + 1), { expirationTtl: 90000 });
+  const nowSec = Math.floor(Date.now() / 1000);
+  const out = { ok: true, by: nickname(device), v: item, t: nowSec };
+  // 影子丢弃:命中敏感词/时政频道/黄油,对回赠人返回成功,实际不入库
+  if (adult || hitsSensitive([item])) return json(out);
+
+  replies.push({ d: device, t: nowSec, v: item });
+  bottle.replies = replies;
+  const md = Object.assign({}, got.metadata || {}, { r: replies.length });
+  if (!md.d) md.d = bottle.device || "";
+  await env.BOTTLES.put(bid, JSON.stringify(bottle), { metadata: md });
+  invalidateIndex();  // 回执要立刻看到 r
+  return json(out);
+}
+
+function itemThumb(v) {
+  if (!v) return "";
+  if (v.vid) return "https://i.ytimg.com/vi/" + v.vid + "/hqdefault.jpg";
+  return v.thumb || "";
+}
+
+function attr(s) {
+  return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+// 瓶子的公开页 /b/<stamp>(2026-09-29):捞到好瓶子能带走一个链接,发到哪都能预览、
+// 打开就是这一瓶,底下一个「捞一个你的」。og 图直接用第一条内容的封面。
+// 隔离区(q:)和已删的瓶子一律同一张「漂远了」页,外面看不出两者的区别。
+async function handleBottlePage(url, env, stamp) {
+  const origin = url.origin;
+  let base = HTML.split("__ORIGIN__").join(origin);
+  if (url.searchParams.get("lang") === "en") base = enHead(base);
+  const en = url.searchParams.get("lang") === "en";
+  let payload = { gone: true, stamp };
+  let status = 404;
+  let bottle = null;
+  if (STAMP_RE.test(stamp)) {
+    const raw = await env.BOTTLES.get("b:" + stamp);
+    if (raw) { bottle = JSON.parse(raw); status = 200; }
+  }
+  if (bottle) {
+    const by = nickname(bottle.device);
+    const videos = bottle.videos || [];
+    const n = videos.length;
+    payload = {
+      gone: false, stamp, id: bottle.id, by, videos, replies: publicReplies(bottle),
+      seed: (bottle.device || "").indexOf("seed") === 0,
+    };
+    const title = en
+      ? "A bottle from " + by + " · " + n + (n === 1 ? " link" : " links") + " · BK Bottle"
+      : by + " 扔的瓶子 · " + n + " 条 · BK漂流瓶";
+    const desc = videos.map((v) => v.title || "").filter(Boolean).join(" / ").slice(0, 200)
+      || (en ? EN_DESC : "把你最近在看的视频装进瓶子扔进海里，再捞一个陌生人的上来。");
+    const img = itemThumb(videos[0]) || origin + "/og.png?v=2";
+    const link = origin + "/b/" + stamp;
+    const cut = base.indexOf("</head>");
+    let head = base.slice(0, cut);
+    head = head
+      .replace(/<title>[^<]*<\/title>/, "<title>" + attr(title) + "</title>")
+      .replace(/(<meta name="description" content=")[^"]*/, "$1" + attr(desc))
+      .replace(/(<link rel="canonical" href=")[^"]*/, "$1" + link)
+      .replace(/(<meta property="og:title" content=")[^"]*/, "$1" + attr(title))
+      .replace(/(<meta property="og:description" content=")[^"]*/, "$1" + attr(desc))
+      .replace(/(<meta property="og:url" content=")[^"]*/, "$1" + link)
+      .replace(/(<meta property="og:image" content=")[^"]*/, "$1" + attr(img))
+      .replace(/<meta property="og:image:width" content="1200">\s*/, "")
+      .replace(/<meta property="og:image:height" content="630">\s*/, "")
+      .replace(/(<meta name="twitter:title" content=")[^"]*/, "$1" + attr(title))
+      .replace(/(<meta name="twitter:description" content=")[^"]*/, "$1" + attr(desc))
+      .replace(/(<meta name="twitter:image" content=")[^"]*/, "$1" + attr(img))
+      .replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>\s*/, "");
+    base = head + base.slice(cut);
+  }
+  const inject = "<script>window.__BOTTLE__=" + JSON.stringify(payload).replace(/</g, "\\u003c") + ";</script>\n";
+  base = base.replace("</head>", inject + "</head>");
+  return new Response(base, {
+    status,
+    headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" },
+  });
 }
 
 async function handleFish(req, reqUrl, env) {
@@ -589,6 +727,7 @@ async function handleFish(req, reqUrl, env) {
     empty: false, id: bottle.id, videos: bottle.videos, by,
     followed: follow.has(by),
     followable: bottle.device !== device,
+    replies: publicReplies(bottle),
   });
 }
 
@@ -627,6 +766,7 @@ async function handleFeedback(req, reqUrl, env) {
       p: (got.metadata && got.metadata.p) || bottlePlatform(bottle.videos || []),
       f: bottle.fished || (got.metadata && got.metadata.f) || 0,
       t: (got.metadata && got.metadata.t) || bottle.ts || 0,   // 别把新瓶保护期投没了
+      r: Array.isArray(bottle.replies) ? bottle.replies.length : ((got.metadata && got.metadata.r) || 0),
     },
   });
   invalidateIndex();  // 让回执立刻反映新的好评
@@ -636,10 +776,16 @@ async function handleFeedback(req, reqUrl, env) {
 async function collectStats(env) {
   const keys = await getIndex(env);
   const devices = new Set();
-  let real = 0, fishedTotal = 0, good = 0, bad = 0;
+  let real = 0, fishedTotal = 0, good = 0, bad = 0, replies = 0;
   const rows = [];
-  for (const k of keys) {
-    const raw = await env.BOTTLES.get(k.name);
+  // 2026-09-10:原来 300 多个瓶子逐个串行 get,后台页跑到 90 秒以上逼近 120 秒上限
+  // (变慢的真凶不是 v: 翻页,那只有 2 页)。改成 20 个一批并发取,KV 调用次数不变。
+  const raws = [];
+  for (let i = 0; i < keys.length; i += 20) {
+    const batch = keys.slice(i, i + 20).map((k) => env.BOTTLES.get(k.name));
+    raws.push(...(await Promise.all(batch)));
+  }
+  for (const raw of raws) {
     if (!raw) continue;
     const b = JSON.parse(raw);
     const isSeed = (b.device || "").indexOf("seed") === 0;
@@ -649,6 +795,7 @@ async function collectStats(env) {
       : Object.values(b.votes || {}).filter((v) => v === "good").length;
     const bd = Object.values(b.votes || {}).filter((v) => v === "bad").length;
     fishedTotal += b.fished || 0; good += g; bad += bd;
+    replies += Array.isArray(b.replies) ? b.replies.length : 0;
     rows.push({
       id: b.id, seed: isSeed, n: (b.videos || []).length,
       p: bottlePlatform(b.videos || []),
@@ -689,7 +836,7 @@ async function collectStats(env) {
   return {
     total: keys.length, real, devices: devices.size,
     visitors, returning, installed, visitorsCapped: !vl.list_complete,
-    bySrc, fishedTotal, good, bad, rows,
+    bySrc, fishedTotal, good, bad, replies, rows,
   };
 }
 
@@ -729,6 +876,7 @@ async function handleAdmin(url, env) {
     + "</b></div>"
     + "<div>累计被捞（抽样估算）<b>" + s.fishedTotal + "</b></div>"
     + "<div>🌟 收藏<b>" + s.good + "</b></div>"
+    + "<div>↩ 回赠<b>" + s.replies + "</b></div>"
     + "<div>🫧 一般（07-28 已撤）<b>" + s.bad + "</b></div></div>";
   // 池子健康度:回头率是手段不是目标,海里有没有新鲜瓶子才是。
   // 全部从已拉取的 stat: 快照上算,不多花一次 KV 操作;快照不满 30 天就用最早那天当基线
@@ -794,6 +942,15 @@ export default {
       if (hitsSensitive(b.videos || [])) {
         await env.BOTTLES.put("q:" + k.name.slice(2), raw, { metadata: k.metadata || {} });
         await env.BOTTLES.delete(k.name);
+        continue;
+      }
+      // 回赠条目同样追溯:命中的单条摘掉,瓶子本身不动
+      const reps = Array.isArray(b.replies) ? b.replies : [];
+      const clean = reps.filter((r) => !hitsSensitive([r.v || {}]));
+      if (clean.length !== reps.length) {
+        b.replies = clean;
+        await env.BOTTLES.put(k.name, JSON.stringify(b),
+          { metadata: Object.assign({}, k.metadata || {}, { r: clean.length }) });
       }
     }
     const s = await collectStats(env);
@@ -843,6 +1000,11 @@ async function route(req, env) {
     if (req.method === "GET" && url.hostname.endsWith(".workers.dev") &&
         (p === "/" || p === "/index.html")) {
       return Response.redirect(CANON + "/" + url.search, 301);
+    }
+    if (req.method === "GET" && p.indexOf("/b/") === 0) {
+      // 瓶子公开页。workers.dev 上的也 301 到正式域名,链接只认一个
+      if (url.hostname.endsWith(".workers.dev")) return Response.redirect(CANON + p + url.search, 301);
+      return handleBottlePage(url, env, p.slice(3).replace(/\/+$/, ""));
     }
     if (req.method === "GET") {
       if (p === "/robots.txt") {
@@ -935,22 +1097,43 @@ async function route(req, env) {
         const dev = url.searchParams.get("device") || "";
         if (!dev) return json({ bottles: 0 });
         const keys = await getIndex(env);
-        let bottles = 0, good = 0, fished = 0;
+        let bottles = 0, good = 0, fished = 0, replies = 0;
+        const mine = [];
         for (const k of keys) {
           const m = k.metadata || {};
           if (m.d !== dev) continue;
           bottles++;
           good += m.g || 0;
           fished += m.f || 0;
+          replies += m.r || 0;
+          mine.push(k);
         }
+        // 瓶子清单(2026-09-29):给扔瓶人一条能发出去的链接,以及别人放回来的东西。
+        // 最多取最近 10 瓶的正文;读额度一天 10 万,这点读不算什么
+        mine.sort((a, b) => ((b.metadata || {}).t || 0) - ((a.metadata || {}).t || 0));
+        const recent = mine.slice(0, 10);
+        const raws = await Promise.all(recent.map((k) => env.BOTTLES.get(k.name)));
+        const list = raws.map((raw, i) => {
+          if (!raw) return null;
+          const b = JSON.parse(raw);
+          const m = recent[i].metadata || {};
+          const vids = b.videos || [];
+          return {
+            id: b.id, stamp: String(b.id || "").slice(2), n: vids.length,
+            first: ((vids[0] || {}).title || "").slice(0, 40),
+            g: m.g || 0, f: m.f || 0, t: m.t || b.ts || 0,
+            replies: publicReplies(b),
+          };
+        }).filter(Boolean);
         // yys(有意思值):账号贡献值,1 个 🌟 = 2 yys。纯派生不落库,规则只在这一处
-        return json({ bottles, good, fished, yys: good * 2, name: nickname(dev) });
+        return json({ bottles, good, fished, replies, yys: good * 2, name: nickname(dev), list });
       }
       if (p === "/api/fish") return handleFish(req, url, env);
     }
     if (req.method === "POST") {
       if (p === "/api/throw") return handleThrow(req, url, env);
       if (p === "/api/feedback") return handleFeedback(req, url, env);
+      if (p === "/api/reply") return handleReply(req, url, env);
       if (p === "/api/fish") return handleFish(req, url, env);
     }
     return new Response("not found", { status: 404 });
